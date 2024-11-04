@@ -1,7 +1,7 @@
 // next.config.mjs
 
 /** @type {import('next').NextConfig} */
-const nextConfig = {
+const config = {
   experimental: {},
   env: {
     NEXTAUTH_URL: process.env.NEXTAUTH_URL,
@@ -11,4 +11,4 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+export default config;
