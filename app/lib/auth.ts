@@ -1,9 +1,8 @@
 import NextAuth, { NextAuthOptions } from "next-auth";
-import type { NextApiHandler } from "next";
 
-// Set up your authOptions
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
+
   providers: [
     {
       id: "worldcoin",
@@ -18,9 +17,10 @@ export const authOptions: NextAuthOptions = {
       profile(profile) {
         return {
           id: profile.sub,
-          name: profile.sub,
+          name: profile.name || profile.sub, // Use `profile.sub` as a fallback if `name` is unavailable
           verificationLevel:
-            profile["https://id.worldcoin.org/v1"].verification_level,
+            profile["https://id.worldcoin.org/v1"]?.verification_level ||
+            "default",
         };
       },
     },
@@ -32,7 +32,3 @@ export const authOptions: NextAuthOptions = {
   },
   debug: process.env.NODE_ENV === "development",
 };
-
-// Define the handler using NextAuth
-const handler: NextApiHandler = (req, res) => NextAuth(req, res, authOptions);
-export { handler as GET, handler as POST };
