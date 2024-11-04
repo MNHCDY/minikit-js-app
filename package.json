@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@types/next-auth": "^3.15.0",
     "@worldcoin/minikit-js": "1.1.1",
     "eruda": "^3.2.3",
     "next": "14.2.6",
