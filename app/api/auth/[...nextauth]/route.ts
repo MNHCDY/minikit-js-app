@@ -1,11 +1,37 @@
-// app/api/auth/[...nextauth]/route.ts
+import NextAuth, { NextAuthOptions } from "next-auth";
 
-import NextAuth from "next-auth";
-import type { NextAuthOptions } from "next-auth";
-import { authOptions } from "@/lib/auth"; // Ensure this path is correct and points to your auth configuration
+export const authOptions: NextAuthOptions = {
+  secret: process.env.NEXTAUTH_SECRET,
 
-// Handler to set up NextAuth with options
+  providers: [
+    {
+      id: "worldcoin",
+      name: "Worldcoin",
+      type: "oauth",
+      wellKnown: "https://id.worldcoin.org/.well-known/openid-configuration",
+      authorization: { params: { scope: "openid" } },
+      clientId: process.env.WLD_CLIENT_ID,
+      clientSecret: process.env.WLD_CLIENT_SECRET,
+      idToken: true,
+      checks: ["state", "nonce", "pkce"],
+      profile(profile) {
+        return {
+          id: profile.sub,
+          name: profile.name || profile.sub, // Use `profile.sub` as a fallback if `name` is unavailable
+          verificationLevel:
+            profile["https://id.worldcoin.org/v1"]?.verification_level ||
+            "default",
+        };
+      },
+    },
+  ],
+  callbacks: {
+    async signIn({ user }) {
+      return true;
+    },
+  },
+  debug: process.env.NODE_ENV === "development",
+};
+
 const handler = NextAuth(authOptions);
-
-// Export only the handlers for GET and POST as required by Next.js routes
 export { handler as GET, handler as POST };
