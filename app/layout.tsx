@@ -23,6 +23,8 @@ export default function RootLayout({
       ssr: false,
     }
   );
+  console.log("SECRET ", process.env.NEXTAUTH_SECRET);
+
   return (
     <html lang="en">
       <NextAuthProvider>

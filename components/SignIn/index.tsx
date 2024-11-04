@@ -2,6 +2,8 @@
 import { signIn, signOut, useSession } from "next-auth/react";
 
 export const SignIn = () => {
+  console.log("SECRET ", process.env.NEXTAUTH_SECRET);
+
   const { data: session } = useSession();
   if (session) {
     return (
