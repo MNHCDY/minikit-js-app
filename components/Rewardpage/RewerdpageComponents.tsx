@@ -15,7 +15,7 @@ const RewerdpageComponents = () => {
           className="w-full h-full object-cover"
         />
         {/* Foreground Content layered over the Background */}
-        <div className="absolute inset-0 z-10">
+        <div className="absolute inset-0 z-10 w-full">
           <Options />
         </div>
       </div>
