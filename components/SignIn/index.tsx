@@ -1,3 +1,5 @@
+"use client";
+
 // Modify the TypeScript definitions to include `world_id_token`
 import { Session } from "next-auth";
 import { signIn, signOut, useSession } from "next-auth/react";
