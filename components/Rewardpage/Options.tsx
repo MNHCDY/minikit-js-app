@@ -1,16 +1,21 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FaArrowLeft } from "react-icons/fa6";
+import supabase from "../Supabase/supabaseClient";
+import { useSession } from "next-auth/react";
 
 type TaskType = "email" | "worldID" | "twitter" | "purchase";
 
 const Options = () => {
   const router = useRouter();
+  const { data: session } = useSession();
   const goToAnotherPage = () => {
     router.push("/landing-page");
   };
 
+  // Initialize email registration state based on local storage
+  const [isEmailRegistered, setIsEmailRegistered] = useState(false);
   const [clickedTasks, setClickedTasks] = useState<{
     email: boolean;
     worldID: boolean;
@@ -23,19 +28,51 @@ const Options = () => {
     purchase: false,
   });
 
-  const handleClick = (task: TaskType) => {
+  useEffect(() => {
+    // Check if email is registered by looking at local storage
+    const emailRegistered =
+      localStorage.getItem("isEmailRegistered") === "true";
+    if (emailRegistered) {
+      setIsEmailRegistered(true);
+      setClickedTasks((prev) => ({ ...prev, email: true }));
+    }
+  }, []);
+
+  const handleClick = async (task: TaskType) => {
+    if (!isEmailRegistered && task !== "email") return;
+
     setClickedTasks((prev) => ({
       ...prev,
-      [task]: !prev[task],
+      [task]: true, // Mark task as completed
     }));
 
-    // Navigate based on task type
+    if (task === "email") {
+      setIsEmailRegistered(true);
+      localStorage.setItem("isEmailRegistered", "true"); // Persist email registration
+    }
+
+    if (task === "twitter") {
+      window.open("https://x.com/drinkflojo", "_blank");
+      try {
+        const worldId = session?.user?.name;
+        const { data, error } = await supabase
+          .from("users")
+          .update({ points: 20 })
+          .eq("world_id", worldId);
+
+        if (error) {
+          console.error("Error updating points in Supabase:", error.message);
+        } else {
+          console.log("Points updated successfully:", data);
+        }
+      } catch (error) {
+        console.error("Unexpected error:", error);
+      }
+    }
+
     switch (task) {
       case "email":
-        router.push("/enteremail");
-        break;
-      case "worldID":
-        router.push("/world-id");
+        router.push("/enter-email");
         break;
       default:
         break;
@@ -84,30 +121,12 @@ const Options = () => {
             </span>
           </div>
 
-          {/* WorldID Task */}
-          <div
-            onClick={() => handleClick("worldID")}
-            className="flex items-center justify-between px-[3vw] py-[4.2vw] border-2 rounded-xl cursor-pointer border-[#07494E] bg-white"
-          >
-            <div className="flex items-center space-x-3">
-              <div
-                className={`w-5 h-5 rounded-full border-2 border-[#07494E] flex items-center justify-center ${
-                  clickedTasks.worldID ? "bg-[#07494E]" : "bg-transparent"
-                }`}
-              ></div>
-              <span className="text-[#07494E] font-medium">
-                Register your WorldID
-              </span>
-            </div>
-            <span className="text-[#07494E] font-bold text-[5vw] pr-[3.5vw]">
-              +1 pt
-            </span>
-          </div>
-
           {/* Twitter Task */}
           <div
             onClick={() => handleClick("twitter")}
-            className="flex items-center justify-between px-[3vw] py-[4.2vw] border-2 rounded-xl cursor-pointer border-[#07494E] bg-white"
+            className={`flex items-center justify-between px-[3vw] py-[4.2vw] border-2 rounded-xl cursor-pointer border-[#07494E] bg-white ${
+              !isEmailRegistered ? "opacity-50 cursor-not-allowed" : ""
+            }`}
           >
             <div className="flex items-center space-x-3">
               <div
@@ -125,7 +144,9 @@ const Options = () => {
           {/* Purchase Task */}
           <div
             onClick={() => handleClick("purchase")}
-            className="flex items-center justify-between px-[3vw] py-[4.2vw] border-2 rounded-xl cursor-pointer border-[#07494E] bg-white"
+            className={`flex items-center justify-between px-[3vw] py-[4.2vw] border-2 rounded-xl cursor-pointer border-[#07494E] bg-white ${
+              !isEmailRegistered ? "opacity-50 cursor-not-allowed" : ""
+            }`}
           >
             <div className="flex items-center space-x-3">
               <div

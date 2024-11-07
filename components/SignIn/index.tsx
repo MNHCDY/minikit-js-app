@@ -25,7 +25,7 @@ export const SignIn = () => {
     try {
       // Check if the user already exists in the "rewards" table
       const { data: existingUser, error: fetchError } = await supabase
-        .from("rewards")
+        .from("users")
         .select("world_id")
         .eq("world_id", session?.user?.name || "");
 
@@ -36,7 +36,7 @@ export const SignIn = () => {
 
       // If no record exists, proceed to insert the new World ID
       if (existingUser.length === 0) {
-        const { data, error } = await supabase.from("rewards").upsert(
+        const { data, error } = await supabase.from("users").upsert(
           {
             email: session?.user?.email || "",
             world_id: worldIDToken,
