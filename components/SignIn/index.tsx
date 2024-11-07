@@ -1,15 +1,71 @@
 "use client";
+
+// Modify the TypeScript definitions to include `world_id_token`
 import { signIn, signOut, useSession } from "next-auth/react";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import supabase from "@/components/Supabase/supabaseClient";
+
+// Extend the Session type to include world_id_token
+declare module "next-auth" {
+  interface Session {
+    user: {
+      email?: string | null;
+      name?: string | null;
+    };
+  }
+}
 
 export const SignIn = () => {
   const router = useRouter();
   const { data: session } = useSession();
 
+  // Function to check if the World ID already exists in Supabase
+  const checkAndSaveTokenToSupabase = async (worldIDToken: string) => {
+    try {
+      // Check if the user already exists in the "rewards" table
+      const { data: existingUser, error: fetchError } = await supabase
+        .from("rewards")
+        .select("world_id")
+        .eq("world_id", session?.user?.name || "");
+
+      if (fetchError) {
+        console.error("Error checking token in Supabase:", fetchError);
+        return;
+      }
+
+      // If no record exists, proceed to insert the new World ID
+      if (existingUser.length === 0) {
+        const { data, error } = await supabase.from("rewards").upsert(
+          {
+            email: session?.user?.email || "",
+            world_id: worldIDToken,
+          },
+          { onConflict: "email" }
+        );
+
+        if (error) {
+          console.error("Error saving token to Supabase:", error);
+        } else {
+          console.log("Token saved successfully:", data);
+        }
+      } else {
+        console.log(
+          "World ID token already exists in Supabase, no need to save."
+        );
+      }
+    } catch (error) {
+      console.error("Unexpected error during Supabase operation:", error);
+    }
+  };
+
+  // Save the token when session is available
   useEffect(() => {
-    // Redirect automatically after 5 seconds if signed in
-    if (session) {
+    if (session?.user?.name) {
+      checkAndSaveTokenToSupabase(session.user.name);
+      console.log(session.user.name);
+
+      // Redirect automatically after 5 seconds if signed in
       const timer = setTimeout(() => {
         router.push("/landing-page");
       }, 5000);
