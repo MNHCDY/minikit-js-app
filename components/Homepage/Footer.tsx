@@ -1,24 +1,37 @@
 import React from "react";
+import google from "@/public/homepage/company-logos/google.webp";
+import microsoft from "@/public/homepage/company-logos/microsoft.webp";
+import stripe from "@/public/homepage/company-logos/stripe.webp";
+import dbs from "@/public/homepage/company-logos/dbs.webp";
+import ripple from "@/public/homepage/company-logos/ripple.webp";
+import citadel from "@/public/homepage/company-logos/citadel.svg";
+import Image from "next/image";
 
 const Footer = () => {
   const data = [
     {
       id: 1,
+      image: google,
     },
     {
       id: 2,
+      image: microsoft,
     },
     {
       id: 3,
+      image: stripe,
     },
     {
       id: 4,
+      image: ripple,
     },
     {
       id: 5,
+      image: dbs,
     },
     {
       id: 6,
+      image: citadel,
     },
   ];
   return (
@@ -31,7 +44,9 @@ const Footer = () => {
         </div>
         <div className="flex flex-wrap gap-[10vw] justify-center items-center">
           {data?.map((item: any) => (
-            <div key={item?.id} className="p-[10vw] bg-white "></div>
+            <div key={item?.id} className=" ">
+              <Image src={item?.image} alt="img" className="w-[25vw]" />
+            </div>
           ))}
         </div>
       </div>

@@ -1,44 +1,173 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FaArrowLeft } from "react-icons/fa6";
+import supabase from "../Supabase/supabaseClient";
+import { useSession } from "next-auth/react";
 
 type TaskType = "email" | "worldID" | "twitter" | "purchase";
 
 const Options = () => {
   const router = useRouter();
-  const goToAnotherPage = () => {
-    router.push("/landing-page");
-  };
-
+  const { data: session } = useSession();
+  const [isEmailRegistered, setIsEmailRegistered] = useState(false);
   const [clickedTasks, setClickedTasks] = useState<{
     email: boolean;
-    worldID: boolean;
     twitter: boolean;
     purchase: boolean;
   }>({
     email: false,
-    worldID: false,
     twitter: false,
     purchase: false,
   });
 
-  const handleClick = (task: TaskType) => {
-    setClickedTasks((prev) => ({
-      ...prev,
-      [task]: !prev[task],
-    }));
+  useEffect(() => {
+    const fetchTaskCompletionStatus = async () => {
+      try {
+        const worldId = session?.user?.name;
+        const { data, error } = await supabase
+          .from("users")
+          .select("email, twitter_id, purchase_completed")
+          .eq("world_id", worldId)
+          .single();
 
-    // Navigate based on task type
-    switch (task) {
-      case "email":
-        router.push("/enteremail");
-        break;
-      case "worldID":
-        router.push("/world-id");
-        break;
-      default:
-        break;
+        if (error) throw error;
+
+        if (data) {
+          setClickedTasks({
+            email: !!data.email, // Set to true if email exists
+            twitter: !!data.twitter_id, // Set to true if twitter_id exists
+            purchase: data.purchase_completed,
+          });
+          setIsEmailRegistered(!!data.email); // Set to true if email exists
+        }
+      } catch (error) {
+        console.error(
+          "Error fetching task completion status:",
+          (error as Error).message
+        );
+      }
+    };
+
+    if (session) {
+      fetchTaskCompletionStatus();
+    }
+  }, [session]);
+
+  const handleClick = async (task: TaskType) => {
+    if (!isEmailRegistered && task !== "email") return;
+
+    const updatedClickedTasks = { ...clickedTasks, [task]: true };
+    setClickedTasks(updatedClickedTasks);
+
+    try {
+      const worldId = session?.user?.name;
+
+      // Use a more flexible type for updateData
+      const updateData: Record<string, any> = {
+        purchase_completed: updatedClickedTasks.purchase,
+      };
+
+      // Conditionally add email and twitter_id if they are completed
+      if (updatedClickedTasks.email) updateData.email = session?.user?.email;
+      if (updatedClickedTasks.twitter)
+        updateData.twitter_id = "twitter_user_id"; // Replace as needed
+
+      const { error } = await supabase
+        .from("users")
+        .update(updateData)
+        .eq("world_id", worldId);
+
+      if (error) throw error;
+
+      if (task === "email") {
+        setIsEmailRegistered(true);
+      }
+
+      if (task === "twitter") {
+        window.open("https://x.com/drinkflojo", "_blank");
+        const { data: pointsData, error: pointsError } = await supabase
+          .from("users")
+          .update({ points: 20 })
+          .eq("world_id", worldId);
+
+        if (pointsError) {
+          console.error(
+            "Error updating points in Supabase:",
+            pointsError.message
+          );
+        } else {
+          console.log("Points updated successfully:", pointsData);
+        }
+      }
+
+      switch (task) {
+        case "email":
+          router.push("/enter-email");
+          break;
+        default:
+          break;
+      }
+    } catch (error) {
+      console.error("Error updating task completion in Supabase:", error);
+    }
+  };
+  const handlePurchaseClick = () => {
+    window.open(
+      "https://drinkflojo.com/checkouts/cn/Z2NwLXVzLXdlc3QxOjAxSkNGQlRaUTlYNUtUM1haRlBZMENKQUY3?discount=",
+      "_blank"
+    );
+
+    pollForPurchaseSuccess();
+  };
+
+  const pollForPurchaseSuccess = async () => {
+    const userId = session?.user?.name; // Replace with the unique identifier for the user
+
+    // Poll every 5 seconds for up to 1 minute to check if the purchase was successful
+    const maxRetries = 20;
+    let retries = 0;
+    const interval = setInterval(async () => {
+      retries++;
+
+      const { data, error } = await supabase
+        .from("users")
+        .select("purchase_completed")
+        .eq("world_id", userId)
+        .single();
+
+      if (error) {
+        console.error("Error checking purchase status:", error);
+        clearInterval(interval);
+        return;
+      }
+
+      if (data?.purchase_completed) {
+        clearInterval(interval);
+        await updatePoints(40); // Update with 40 points on successful purchase
+        setClickedTasks((prev) => ({ ...prev, purchase: true }));
+        console.log("Purchase detected and points updated.");
+      } else if (retries >= maxRetries) {
+        clearInterval(interval);
+        console.log("Purchase not detected within the timeout period.");
+      }
+    }, 5000); // Poll every 5 seconds
+  };
+
+  const updatePoints = async (points: number) => {
+    const userId = session?.user?.name;
+
+    const { error } = await supabase
+      .from("users")
+      .update({
+        points: supabase.rpc("increment_points", { user_id: userId, points }), // Use a stored function (or RPC)
+      })
+      .eq("world_id", userId);
+
+    if (error) {
+      console.error("Error updating points in Supabase:", error.message);
+    } else {
+      console.log("Points updated successfully.");
     }
   };
 
@@ -47,7 +176,7 @@ const Options = () => {
       <div className="p-[5vw] flex flex-col gap-[4vw]">
         <div>
           <button
-            onClick={goToAnotherPage}
+            onClick={() => router.push("/landing-page")}
             className="text-[10vw] font-extralight"
           >
             <FaArrowLeft />
@@ -84,30 +213,12 @@ const Options = () => {
             </span>
           </div>
 
-          {/* WorldID Task */}
-          <div
-            onClick={() => handleClick("worldID")}
-            className="flex items-center justify-between px-[3vw] py-[4.2vw] border-2 rounded-xl cursor-pointer border-[#07494E] bg-white"
-          >
-            <div className="flex items-center space-x-3">
-              <div
-                className={`w-5 h-5 rounded-full border-2 border-[#07494E] flex items-center justify-center ${
-                  clickedTasks.worldID ? "bg-[#07494E]" : "bg-transparent"
-                }`}
-              ></div>
-              <span className="text-[#07494E] font-medium">
-                Register your WorldID
-              </span>
-            </div>
-            <span className="text-[#07494E] font-bold text-[5vw] pr-[3.5vw]">
-              +1 pt
-            </span>
-          </div>
-
           {/* Twitter Task */}
           <div
             onClick={() => handleClick("twitter")}
-            className="flex items-center justify-between px-[3vw] py-[4.2vw] border-2 rounded-xl cursor-pointer border-[#07494E] bg-white"
+            className={`flex items-center justify-between px-[3vw] py-[4.2vw] border-2 rounded-xl cursor-pointer border-[#07494E] bg-white ${
+              !isEmailRegistered ? "opacity-50 cursor-not-allowed" : ""
+            }`}
           >
             <div className="flex items-center space-x-3">
               <div
@@ -125,7 +236,9 @@ const Options = () => {
           {/* Purchase Task */}
           <div
             onClick={() => handleClick("purchase")}
-            className="flex items-center justify-between px-[3vw] py-[4.2vw] border-2 rounded-xl cursor-pointer border-[#07494E] bg-white"
+            className={`flex items-center justify-between px-[3vw] py-[4.2vw] border-2 rounded-xl cursor-pointer border-[#07494E] bg-white ${
+              !isEmailRegistered ? "opacity-50 cursor-not-allowed" : ""
+            }`}
           >
             <div className="flex items-center space-x-3">
               <div
