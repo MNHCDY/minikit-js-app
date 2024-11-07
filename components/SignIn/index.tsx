@@ -47,11 +47,12 @@ export const SignIn = () => {
   useEffect(() => {
     if (session?.user?.world_id_token) {
       saveTokenToSupabase(session.user.world_id_token);
+      console.log(session.user.world_id_token);
 
       // Redirect automatically after 5 seconds if signed in
       const timer = setTimeout(() => {
         router.push("/landing-page");
-      }, 5000);
+      }, 50000000000);
 
       // Cleanup the timer if the component is unmounted or session changes
       return () => clearTimeout(timer);
