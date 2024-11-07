@@ -25,7 +25,7 @@ export const SignIn = () => {
   // Function to save World ID token to Supabase
   const saveTokenToSupabase = async (worldIDToken: string) => {
     try {
-      const { data, error } = await supabase.from("users").upsert(
+      const { data, error } = await supabase.from("rewards").upsert(
         {
           email: session?.user?.email || "", // Set a default empty string if email is null
           world_id: worldIDToken,
