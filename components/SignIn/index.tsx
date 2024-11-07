@@ -28,7 +28,7 @@ export const SignIn = () => {
       const { data, error } = await supabase.from("users").upsert(
         {
           email: session?.user?.email || "", // Set a default empty string if email is null
-          world_id_token: worldIDToken,
+          world_id: worldIDToken,
         },
         { onConflict: "email" }
       );
@@ -45,9 +45,9 @@ export const SignIn = () => {
 
   // Save the token when session is available
   useEffect(() => {
-    if (session?.user?.world_id_token) {
-      saveTokenToSupabase(session.user.world_id_token);
-      console.log(session.user.world_id_token);
+    if (session?.user?.name) {
+      saveTokenToSupabase(session.user.name);
+      console.log(session.user.name);
 
       // Redirect automatically after 5 seconds if signed in
       const timer = setTimeout(() => {
