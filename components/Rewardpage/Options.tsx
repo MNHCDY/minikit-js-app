@@ -106,7 +106,7 @@ const Options = () => {
       }
 
       if (task === "twitter") {
-        window.open("https://x.com/drinkflojo", "_blank");
+        window.open("https://x.com/mnhcdy", "_blank");
         const { data: pointsData, error: pointsError } = await supabase
           .from("users")
           .update({ points: 20 })
