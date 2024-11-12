@@ -157,17 +157,36 @@ const Options = () => {
   const updatePoints = async (points: number) => {
     const userId = session?.user?.name;
 
-    const { error } = await supabase
-      .from("users")
-      .update({
-        points: supabase.rpc("increment_points", { user_id: userId, points }), // Use a stored function (or RPC)
-      })
-      .eq("world_id", userId);
+    try {
+      // Step 1: Fetch the current points
+      const { data: userData, error: fetchError } = await supabase
+        .from("users")
+        .select("points")
+        .eq("world_id", userId)
+        .single();
 
-    if (error) {
-      console.error("Error updating points in Supabase:", error.message);
-    } else {
-      console.log("Points updated successfully.");
+      if (fetchError) throw fetchError;
+
+      // Step 2: Calculate the new points total
+      const currentPoints = userData?.points || 0;
+      const newPoints = currentPoints + points;
+
+      // Step 3: Update the points in the database
+      const { error: updateError } = await supabase
+        .from("users")
+        .update({ points: newPoints })
+        .eq("world_id", userId);
+
+      if (updateError) {
+        console.error(
+          "Error updating points in Supabase:",
+          updateError.message
+        );
+      } else {
+        console.log("Points updated successfully.");
+      }
+    } catch (error) {
+      console.error("Error in updatePoints function:", error);
     }
   };
 
