@@ -2,7 +2,7 @@ import React from "react";
 import google from "@/public/homepage/company-logos/google.webp";
 import microsoft from "@/public/homepage/company-logos/microsoft.webp";
 import stripe from "@/public/homepage/company-logos/stripe.webp";
-import dbs from "@/public/homepage/company-logos/DBS.webp";
+import dbs from "@/public/homepage/company-logos/dbs.webp";
 import ripple from "@/public/homepage/company-logos/ripple.webp";
 import citadel from "@/public/homepage/company-logos/citadel.svg";
 import Image from "next/image";
