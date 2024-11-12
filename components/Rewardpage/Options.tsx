@@ -215,13 +215,15 @@ const Options = () => {
     const twitterUserId = (session?.user as any)?.id; // get user's Twitter ID
     const yourTwitterId = "MNHCDY"; // replace with your Twitter account ID
 
+    console.log(twitterUserId);
+
     const follows = await checkIfUserFollows(twitterUserId, yourTwitterId);
 
     if (follows) {
       // Update the database with follow status and reward points
       await supabase
         .from("users")
-        .update({ twitter_id: twitterUserId, points: 20 })
+        .update({ twitter_id: twitterUserId, points: 40 })
         .eq("world_id", session?.user?.name);
       setClickedTasks((prev) => ({ ...prev, twitter: true }));
     } else {
