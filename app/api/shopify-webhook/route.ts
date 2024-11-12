@@ -1,6 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-
-import { createHmac } from "crypto"; // Import createHmac directly from crypto
+import { createHmac } from "crypto";
 import supabase from "@/components/Supabase/supabaseClient";
 
 export default async function handler(
@@ -9,17 +8,22 @@ export default async function handler(
 ) {
   if (req.method === "POST") {
     try {
-      const data = req.body;
+      const rawBody = await getRawBody(req);
 
-      // Verify the Shopify webhook (optional but recommended)
-      const isValid = verifyShopifyWebhook(req, data);
+      // Verify the Shopify webhook (recommended for security)
+      const isValid = verifyShopifyWebhook(req, rawBody);
       if (!isValid) {
         return res.status(403).json({ error: "Unauthorized" });
       }
 
-      // Extract necessary data and update points or set purchase completed
+      const data = JSON.parse(rawBody); // Parse the JSON data after verification
       const userId = data.customer?.id;
 
+      if (!userId) {
+        return res.status(400).json({ error: "Invalid customer ID" });
+      }
+
+      // Update database to reflect purchase completion
       const { error } = await supabase
         .from("users")
         .update({ purchase_completed: true })
@@ -31,6 +35,7 @@ export default async function handler(
 
       res.status(200).json({ success: true });
     } catch (error) {
+      console.error("Error processing webhook:", error);
       res.status(500).json({ error: "Internal server error" });
     }
   } else {
@@ -39,12 +44,34 @@ export default async function handler(
   }
 }
 
+// Helper function to get raw body data
+async function getRawBody(req: NextApiRequest): Promise<string> {
+  return new Promise((resolve, reject) => {
+    let data = "";
+    req.on("data", (chunk) => {
+      data += chunk;
+    });
+    req.on("end", () => {
+      resolve(data);
+    });
+    req.on("error", (err) => {
+      reject(err);
+    });
+  });
+}
+
 // Function to verify the webhook
-function verifyShopifyWebhook(req: NextApiRequest, data: any): boolean {
+function verifyShopifyWebhook(req: NextApiRequest, rawBody: string): boolean {
   const shopifySecret = process.env.SHOPIFY_WEBHOOK_SECRET || "";
   const hmac = req.headers["x-shopify-hmac-sha256"] as string;
+
+  if (!hmac) {
+    console.warn("No HMAC signature found in request headers");
+    return false;
+  }
+
   const generatedHmac = createHmac("sha256", shopifySecret)
-    .update(JSON.stringify(data), "utf8")
+    .update(rawBody, "utf8")
     .digest("base64");
 
   return hmac === generatedHmac;
