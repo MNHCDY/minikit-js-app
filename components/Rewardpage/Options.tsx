@@ -212,12 +212,12 @@ const Options = () => {
   };
 
   const handleClickTwitter = async () => {
-    const twitterUserId = (session?.user as any)?.id;
-    if (!twitterUserId) {
-      // Handle case when the user ID is missing (e.g., show an error message)
-      console.error("User is not logged in or missing Twitter ID");
-      return; // or handle appropriately
-    }
+    const twitterUserId = "manish27111";
+    // if (!twitterUserId) {
+    //   // Handle case when the user ID is missing (e.g., show an error message)
+    //   console.error("User is not logged in or missing Twitter ID");
+    //   return; // or handle appropriately
+    // }
 
     const yourTwitterId = "MNHCDY"; // replace with your Twitter account ID
 
@@ -232,6 +232,7 @@ const Options = () => {
         .update({ twitter_id: twitterUserId, points: 40 })
         .eq("world_id", session?.user?.name);
       setClickedTasks((prev) => ({ ...prev, twitter: true }));
+      console.log("you did it");
     } else {
       console.log("User does not follow the specified account.");
     }
