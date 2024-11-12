@@ -62,11 +62,16 @@ const Options = () => {
 
     try {
       const worldId = session?.user?.name;
-      const updateData = {
-        email_completed: updatedClickedTasks.email,
-        twitter_completed: updatedClickedTasks.twitter,
+
+      // Use a more flexible type for updateData
+      const updateData: Record<string, any> = {
         purchase_completed: updatedClickedTasks.purchase,
       };
+
+      // Conditionally add email and twitter_id if they are completed
+      if (updatedClickedTasks.email) updateData.email = session?.user?.email;
+      if (updatedClickedTasks.twitter)
+        updateData.twitter_id = "twitter_user_id"; // Replace as needed
 
       const { error } = await supabase
         .from("users")
