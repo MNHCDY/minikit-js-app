@@ -190,7 +190,7 @@ const Options = () => {
 
       // Step 2: Calculate the new points total
       const currentPoints = userData?.points || 0;
-      const newPoints = currentPoints + points;
+      const newPoints = currentPoints + 40;
 
       // Step 3: Update the points in the database
       const { error: updateError } = await supabase
@@ -212,30 +212,61 @@ const Options = () => {
   };
 
   const handleClickTwitter = async () => {
-    const twitterUserId = "manish27111";
-    // if (!twitterUserId) {
-    //   // Handle case when the user ID is missing (e.g., show an error message)
-    //   console.error("User is not logged in or missing Twitter ID");
-    //   return; // or handle appropriately
-    // }
+    const twitterUserId = "Manish27111"; // Replace with Twitter user ID from session data
+    const yourTwitterId = "mnhcdy"; // Replace with your Twitter account ID
 
-    const yourTwitterId = "MNHCDY"; // replace with your Twitter account ID
+    // Redirect to Twitter
+    window.open("https://twitter.com/mnhcdy", "_blank");
 
-    console.log(twitterUserId);
+    let retries = 0;
+    const maxRetries = 12;
+    const interval = setInterval(async () => {
+      retries += 1;
+      const response = await fetch(
+        `/api/checkTwitterFollow?userId=${twitterUserId}&targetUserId=${yourTwitterId}`
+      );
+      const { follows } = await response.json();
 
-    const follows = await checkIfUserFollows(twitterUserId, yourTwitterId);
+      if (follows) {
+        clearInterval(interval);
 
-    if (follows) {
-      // Update the database with follow status and reward points
-      await supabase
-        .from("users")
-        .update({ twitter_id: twitterUserId, points: 40 })
-        .eq("world_id", session?.user?.name);
-      setClickedTasks((prev) => ({ ...prev, twitter: true }));
-      console.log("you did it");
-    } else {
-      console.log("User does not follow the specified account.");
-    }
+        // Step 1: Fetch current points
+        const userId = session?.user?.name;
+        const { data: userData, error: fetchError } = await supabase
+          .from("users")
+          .select("points")
+          .eq("world_id", userId)
+          .single();
+
+        if (fetchError) {
+          console.error("Error fetching points:", fetchError.message);
+          return;
+        }
+
+        // Step 2: Calculate new points total
+        const currentPoints = userData?.points || 0;
+        const newPoints = currentPoints + 40;
+
+        // Step 3: Update points in the database
+        const { error: updateError } = await supabase
+          .from("users")
+          .update({ points: newPoints })
+          .eq("world_id", userId);
+
+        if (updateError) {
+          console.error(
+            "Error updating points in Supabase:",
+            updateError.message
+          );
+        } else {
+          console.log("Points updated successfully.");
+          setClickedTasks((prev) => ({ ...prev, twitter: true }));
+        }
+      } else if (retries >= maxRetries) {
+        clearInterval(interval);
+        console.log("Follow check timed out.");
+      }
+    }, 5000); // Poll every 5 seconds
   };
 
   return (
