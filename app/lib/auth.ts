@@ -25,10 +25,6 @@ export const authOptions: NextAuthOptions = {
         };
       },
     },
-    TwitterProvider({
-      clientId: process.env.TWITTER_CLIENT_ID || "",
-      clientSecret: process.env.TWITTER_CLIENT_SECRET || "",
-    }),
   ],
   callbacks: {
     async signIn({ user }) {

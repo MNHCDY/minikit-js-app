@@ -225,7 +225,9 @@ const Options = () => {
 
       try {
         const response = await fetch(
-          `/api/checkTwitterFollow?userId=${twitterUserId}&targetUserId=${yourTwitterId}`
+          `/api/checkTwitterFollow?userId=${encodeURIComponent(
+            twitterUserId
+          )}&targetUserId=${encodeURIComponent(yourTwitterId)}`
         );
 
         // Check if the response is OK before parsing
@@ -353,7 +355,10 @@ const Options = () => {
 
           {/* Purchase Task */}
           <div
-            onClick={() => handleClick("purchase")}
+            onClick={() => {
+              handleClick("purchase");
+              handlePurchaseClick();
+            }}
             className={`flex items-center justify-between px-[3vw] py-[4.2vw] border-2 rounded-xl cursor-pointer border-[#07494E] bg-white ${
               !isEmailRegistered ? "opacity-50 cursor-not-allowed" : ""
             }`}

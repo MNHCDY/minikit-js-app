@@ -29,6 +29,11 @@ export async function GET(req: NextRequest) {
   const userId = searchParams.get("userId");
   const targetUserId = searchParams.get("targetUserId");
 
+  console.log("API Key:", process.env.TWITTER_API_KEY);
+  console.log("API Secret:", process.env.TWITTER_API_SECRET);
+  console.log("Access Token:", process.env.TWITTER_ACCESS_TOKEN);
+  console.log("Access Secret:", process.env.TWITTER_ACCESS_SECRET);
+
   if (!userId || !targetUserId) {
     return NextResponse.json(
       { error: "Missing required userId or targetUserId" },
@@ -63,7 +68,11 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ follows });
   } catch (error) {
-    console.error("Error checking Twitter follow status:", error);
+    console.error(
+      "Error checking Twitter follow status:",
+      (error as Error).message,
+      (error as Error).stack
+    );
     return NextResponse.json(
       { error: "Failed to check follow status" },
       { status: 500 }
