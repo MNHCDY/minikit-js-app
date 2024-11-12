@@ -2,7 +2,6 @@
 
 import { TwitterApi } from "twitter-api-v2";
 
-// Define the GET method directly as an export
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const userId = url.searchParams.get("userId");
@@ -29,7 +28,10 @@ export async function GET(req: Request) {
   try {
     const response = await client.v2.following(userId);
     const follows = response.data.some((user) => user.id === targetUserId);
-    return new Response(JSON.stringify({ follows }), { status: 200 });
+
+    return new Response(JSON.stringify({ follows }), {
+      status: follows ? 200 : 404,
+    });
   } catch (error) {
     console.error("Error checking follow status:", error);
     return new Response(

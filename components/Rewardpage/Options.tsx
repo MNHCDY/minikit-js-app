@@ -212,7 +212,13 @@ const Options = () => {
   };
 
   const handleClickTwitter = async () => {
-    const twitterUserId = (session?.user as any)?.id; // get user's Twitter ID
+    const twitterUserId = (session?.user as any)?.id;
+    if (!twitterUserId) {
+      // Handle case when the user ID is missing (e.g., show an error message)
+      console.error("User is not logged in or missing Twitter ID");
+      return; // or handle appropriately
+    }
+
     const yourTwitterId = "MNHCDY"; // replace with your Twitter account ID
 
     console.log(twitterUserId);
