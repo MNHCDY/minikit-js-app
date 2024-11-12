@@ -4,6 +4,27 @@ import { useState, useEffect } from "react";
 import { FaArrowLeft } from "react-icons/fa6";
 import supabase from "../Supabase/supabaseClient";
 import { useSession } from "next-auth/react";
+import { TwitterApi } from "twitter-api-v2";
+
+async function checkIfUserFollows(
+  userId: string,
+  targetUserId: string
+): Promise<boolean> {
+  try {
+    const response = await fetch(
+      `/api/twitter?userId=${userId}&targetUserId=${targetUserId}`
+    );
+    if (!response.ok) {
+      throw new Error("Failed to check follow status");
+    }
+
+    const data = await response.json();
+    return data.follows;
+  } catch (error) {
+    console.error("Error checking follow status:", error);
+    return false;
+  }
+}
 
 type TaskType = "email" | "worldID" | "twitter" | "purchase";
 
@@ -190,6 +211,24 @@ const Options = () => {
     }
   };
 
+  const handleClickTwitter = async () => {
+    const twitterUserId = (session?.user as any)?.id; // get user's Twitter ID
+    const yourTwitterId = "MNHCDY"; // replace with your Twitter account ID
+
+    const follows = await checkIfUserFollows(twitterUserId, yourTwitterId);
+
+    if (follows) {
+      // Update the database with follow status and reward points
+      await supabase
+        .from("users")
+        .update({ twitter_id: twitterUserId, points: 20 })
+        .eq("world_id", session?.user?.name);
+      setClickedTasks((prev) => ({ ...prev, twitter: true }));
+    } else {
+      console.log("User does not follow the specified account.");
+    }
+  };
+
   return (
     <div className="flex flex-col justify-items-center w-full text-[#07494E] gap-[8vw]">
       <div className="p-[5vw] flex flex-col gap-[4vw]">
@@ -234,7 +273,10 @@ const Options = () => {
 
           {/* Twitter Task */}
           <div
-            onClick={() => handleClick("twitter")}
+            onClick={() => {
+              handleClick("twitter");
+              handleClickTwitter();
+            }}
             className={`flex items-center justify-between px-[3vw] py-[4.2vw] border-2 rounded-xl cursor-pointer border-[#07494E] bg-white ${
               !isEmailRegistered ? "opacity-50 cursor-not-allowed" : ""
             }`}
