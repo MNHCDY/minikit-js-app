@@ -1,6 +1,20 @@
 import { TwitterApi } from "twitter-api-v2";
 import { NextRequest, NextResponse } from "next/server";
 
+// Define types for the follower data
+interface Follower {
+  id: string;
+  name: string;
+  username: string;
+}
+
+interface UserFollowersV2Response {
+  data: Follower[];
+  meta?: {
+    next_token?: string;
+  };
+}
+
 // Initialize Twitter client
 const client = new TwitterApi({
   appKey: process.env.TWITTER_API_KEY as string,
@@ -23,10 +37,29 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const followers = await client.v2.followers(targetUserId);
+    // Fetch followers in a paginated manner
+    let follows = false;
+    let nextToken: string | undefined = undefined;
 
-    // Check if userId is in the list of followers
-    const follows = followers.data.some((follower) => follower.id === userId);
+    // Paginate through the follower list if necessary
+    do {
+      // Explicitly type the response as UserFollowersV2Response
+      const followersResponse: UserFollowersV2Response =
+        await client.v2.followers(targetUserId, {
+          pagination_token: nextToken,
+        });
+
+      // Check if userId is in the list of followers
+      follows = followersResponse.data.some(
+        (follower: Follower) => follower.id === userId
+      );
+
+      // If user is found, break out of the loop
+      if (follows) break;
+
+      // Prepare next token for pagination if available
+      nextToken = followersResponse.meta?.next_token;
+    } while (nextToken && !follows);
 
     return NextResponse.json({ follows });
   } catch (error) {
