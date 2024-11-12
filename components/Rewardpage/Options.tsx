@@ -112,6 +112,64 @@ const Options = () => {
       console.error("Error updating task completion in Supabase:", error);
     }
   };
+  const handlePurchaseClick = () => {
+    window.open(
+      "https://drinkflojo.com/checkouts/cn/Z2NwLXVzLXdlc3QxOjAxSkNGQlRaUTlYNUtUM1haRlBZMENKQUY3?discount=",
+      "_blank"
+    );
+
+    pollForPurchaseSuccess();
+  };
+
+  const pollForPurchaseSuccess = async () => {
+    const userId = session?.user?.name; // Replace with the unique identifier for the user
+
+    // Poll every 5 seconds for up to 1 minute to check if the purchase was successful
+    const maxRetries = 20;
+    let retries = 0;
+    const interval = setInterval(async () => {
+      retries++;
+
+      const { data, error } = await supabase
+        .from("users")
+        .select("purchase_completed")
+        .eq("world_id", userId)
+        .single();
+
+      if (error) {
+        console.error("Error checking purchase status:", error);
+        clearInterval(interval);
+        return;
+      }
+
+      if (data?.purchase_completed) {
+        clearInterval(interval);
+        await updatePoints(40); // Update with 40 points on successful purchase
+        setClickedTasks((prev) => ({ ...prev, purchase: true }));
+        console.log("Purchase detected and points updated.");
+      } else if (retries >= maxRetries) {
+        clearInterval(interval);
+        console.log("Purchase not detected within the timeout period.");
+      }
+    }, 5000); // Poll every 5 seconds
+  };
+
+  const updatePoints = async (points: number) => {
+    const userId = session?.user?.name;
+
+    const { error } = await supabase
+      .from("users")
+      .update({
+        points: supabase.rpc("increment_points", { user_id: userId, points }), // Use a stored function (or RPC)
+      })
+      .eq("world_id", userId);
+
+    if (error) {
+      console.error("Error updating points in Supabase:", error.message);
+    } else {
+      console.log("Points updated successfully.");
+    }
+  };
 
   return (
     <div className="flex flex-col justify-items-center w-full text-[#07494E] gap-[8vw]">
