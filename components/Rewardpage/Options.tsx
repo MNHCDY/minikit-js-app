@@ -10,6 +10,11 @@ type TaskType = "email" | "worldID" | "twitter" | "purchase";
 const Options = () => {
   const router = useRouter();
   const { data: session } = useSession();
+  const goToAnotherPage = () => {
+    router.push("/landing-page");
+  };
+
+  // Initialize email registration state based on local storage
   const [isEmailRegistered, setIsEmailRegistered] = useState(false);
   const [clickedTasks, setClickedTasks] = useState<{
     email: boolean;
@@ -24,93 +29,53 @@ const Options = () => {
   });
 
   useEffect(() => {
-    const fetchTaskCompletionStatus = async () => {
-      try {
-        const worldId = session?.user?.name;
-        const { data, error } = await supabase
-          .from("users")
-          .select(
-            "email_completed, worldID_completed, twitter_completed, purchase_completed"
-          )
-          .eq("world_id", worldId)
-          .single();
-
-        if (error) throw error;
-
-        if (data) {
-          setClickedTasks({
-            email: data.email_completed,
-            worldID: data.worldID_completed,
-            twitter: data.twitter_completed,
-            purchase: data.purchase_completed,
-          });
-          setIsEmailRegistered(data.email_completed);
-        }
-      } catch (error) {
-        console.error(
-          "Error fetching task completion status:",
-          (error as Error).message
-        );
-      }
-    };
-
-    if (session) {
-      fetchTaskCompletionStatus();
+    // Check if email is registered by looking at local storage
+    const emailRegistered =
+      localStorage.getItem("isEmailRegistered") === "true";
+    if (emailRegistered) {
+      setIsEmailRegistered(true);
+      setClickedTasks((prev) => ({ ...prev, email: true }));
     }
-  }, [session]);
+  }, []);
 
   const handleClick = async (task: TaskType) => {
     if (!isEmailRegistered && task !== "email") return;
 
-    const updatedClickedTasks = { ...clickedTasks, [task]: true };
-    setClickedTasks(updatedClickedTasks);
+    setClickedTasks((prev) => ({
+      ...prev,
+      [task]: true, // Mark task as completed
+    }));
 
-    try {
-      const worldId = session?.user?.name;
-      const updateData = {
-        email_completed: updatedClickedTasks.email,
-        worldID_completed: updatedClickedTasks.worldID,
-        twitter_completed: updatedClickedTasks.twitter,
-        purchase_completed: updatedClickedTasks.purchase,
-      };
+    if (task === "email") {
+      setIsEmailRegistered(true);
+      localStorage.setItem("isEmailRegistered", "true"); // Persist email registration
+    }
 
-      const { error } = await supabase
-        .from("users")
-        .update(updateData)
-        .eq("world_id", worldId);
-
-      if (error) throw error;
-
-      if (task === "email") {
-        setIsEmailRegistered(true);
-      }
-
-      if (task === "twitter") {
-        window.open("https://x.com/drinkflojo", "_blank");
-        const { data: pointsData, error: pointsError } = await supabase
+    if (task === "twitter") {
+      window.open("https://x.com/drinkflojo", "_blank");
+      try {
+        const worldId = session?.user?.name;
+        const { data, error } = await supabase
           .from("users")
           .update({ points: 20 })
           .eq("world_id", worldId);
 
-        if (pointsError) {
-          console.error(
-            "Error updating points in Supabase:",
-            pointsError.message
-          );
+        if (error) {
+          console.error("Error updating points in Supabase:", error.message);
         } else {
-          console.log("Points updated successfully:", pointsData);
+          console.log("Points updated successfully:", data);
         }
+      } catch (error) {
+        console.error("Unexpected error:", error);
       }
+    }
 
-      switch (task) {
-        case "email":
-          router.push("/enter-email");
-          break;
-        default:
-          break;
-      }
-    } catch (error) {
-      console.error("Error updating task completion in Supabase:", error);
+    switch (task) {
+      case "email":
+        router.push("/enter-email");
+        break;
+      default:
+        break;
     }
   };
 
@@ -119,7 +84,7 @@ const Options = () => {
       <div className="p-[5vw] flex flex-col gap-[4vw]">
         <div>
           <button
-            onClick={() => router.push("/landing-page")}
+            onClick={goToAnotherPage}
             className="text-[10vw] font-extralight"
           >
             <FaArrowLeft />
