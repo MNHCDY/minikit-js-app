@@ -1,34 +1,27 @@
-// pages/api/twitter.js
+// app/api/twitter/route.ts
 
-import { NextApiRequest, NextApiResponse } from "next"; // Import types for the request and response
 import { TwitterApi } from "twitter-api-v2";
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  if (req.method !== "GET") {
-    return res.status(405).json({ message: "Only GET requests allowed" });
-  }
-
-  // Ensure userId and targetUserId are strings (or return an error if not)
-  const userId = Array.isArray(req.query.userId)
-    ? req.query.userId[0]
-    : req.query.userId;
-  const targetUserId = Array.isArray(req.query.targetUserId)
-    ? req.query.targetUserId[0]
-    : req.query.targetUserId;
+// Define the GET method directly as an export
+export async function GET(req: Request) {
+  const url = new URL(req.url);
+  const userId = url.searchParams.get("userId");
+  const targetUserId = url.searchParams.get("targetUserId");
 
   if (!userId || !targetUserId) {
-    return res
-      .status(400)
-      .json({ message: "userId and targetUserId are required" });
+    return new Response(
+      JSON.stringify({ message: "userId and targetUserId are required" }),
+      { status: 400 }
+    );
   }
 
   const bearerToken = process.env.TWITTER_BEARER_TOKEN;
 
   if (!bearerToken) {
-    return res.status(500).json({ message: "Twitter Bearer Token missing" });
+    return new Response(
+      JSON.stringify({ message: "Twitter Bearer Token missing" }),
+      { status: 500 }
+    );
   }
 
   const client = new TwitterApi(bearerToken);
@@ -36,9 +29,12 @@ export default async function handler(
   try {
     const response = await client.v2.following(userId);
     const follows = response.data.some((user) => user.id === targetUserId);
-    return res.status(200).json({ follows });
+    return new Response(JSON.stringify({ follows }), { status: 200 });
   } catch (error) {
     console.error("Error checking follow status:", error);
-    return res.status(500).json({ message: "Error checking follow status" });
+    return new Response(
+      JSON.stringify({ message: "Error checking follow status" }),
+      { status: 500 }
+    );
   }
 }
