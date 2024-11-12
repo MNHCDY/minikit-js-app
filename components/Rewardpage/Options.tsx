@@ -4,6 +4,27 @@ import { useState, useEffect } from "react";
 import { FaArrowLeft } from "react-icons/fa6";
 import supabase from "../Supabase/supabaseClient";
 import { useSession } from "next-auth/react";
+import { TwitterApi } from "twitter-api-v2";
+
+async function checkIfUserFollows(
+  userId: string,
+  targetUserId: string
+): Promise<boolean> {
+  try {
+    const response = await fetch(
+      `/api/twitter?userId=${userId}&targetUserId=${targetUserId}`
+    );
+    if (!response.ok) {
+      throw new Error("Failed to check follow status");
+    }
+
+    const data = await response.json();
+    return data.follows;
+  } catch (error) {
+    console.error("Error checking follow status:", error);
+    return false;
+  }
+}
 
 type TaskType = "email" | "worldID" | "twitter" | "purchase";
 
@@ -20,6 +41,10 @@ const Options = () => {
     twitter: false,
     purchase: false,
   });
+
+  const handleFollow = () => {
+    window.location.href = `/api/twitter/oauth`;
+  };
 
   useEffect(() => {
     const fetchTaskCompletionStatus = async () => {
@@ -85,7 +110,7 @@ const Options = () => {
       }
 
       if (task === "twitter") {
-        window.open("https://x.com/drinkflojo", "_blank");
+        window.open("https://x.com/mnhcdy", "_blank");
         const { data: pointsData, error: pointsError } = await supabase
           .from("users")
           .update({ points: 20 })
@@ -157,19 +182,115 @@ const Options = () => {
   const updatePoints = async (points: number) => {
     const userId = session?.user?.name;
 
-    const { error } = await supabase
-      .from("users")
-      .update({
-        points: supabase.rpc("increment_points", { user_id: userId, points }), // Use a stored function (or RPC)
-      })
-      .eq("world_id", userId);
+    try {
+      // Step 1: Fetch the current points
+      const { data: userData, error: fetchError } = await supabase
+        .from("users")
+        .select("points")
+        .eq("world_id", userId)
+        .single();
 
-    if (error) {
-      console.error("Error updating points in Supabase:", error.message);
-    } else {
-      console.log("Points updated successfully.");
+      if (fetchError) throw fetchError;
+
+      // Step 2: Calculate the new points total
+      const currentPoints = userData?.points || 0;
+      const newPoints = currentPoints + 40;
+
+      // Step 3: Update the points in the database
+      const { error: updateError } = await supabase
+        .from("users")
+        .update({ points: newPoints })
+        .eq("world_id", userId);
+
+      if (updateError) {
+        console.error(
+          "Error updating points in Supabase:",
+          updateError.message
+        );
+      } else {
+        console.log("Points updated successfully.");
+      }
+    } catch (error) {
+      console.error("Error in updatePoints function:", error);
     }
   };
+
+  // const handleClickTwitter = async () => {
+  //   const twitterUserId = "Manish27111"; // Replace with Twitter user ID from session data
+  //   const yourTwitterId = "mnhcdy"; // Replace with your Twitter account ID
+
+  //   // Redirect to Twitter
+  //   window.open("https://twitter.com/mnhcdy", "_blank");
+
+  //   let retries = 0;
+  //   const maxRetries = 12;
+  //   const interval = setInterval(async () => {
+  //     retries += 1;
+
+  //     try {
+  //       const response = await fetch(
+  //         `/api/checkTwitterFollow?userId=${encodeURIComponent(
+  //           twitterUserId
+  //         )}&targetUserId=${encodeURIComponent(yourTwitterId)}`
+  //       );
+
+  //       // Check if the response is OK before parsing
+  //       if (!response.ok) {
+  //         throw new Error(`Failed to fetch data: ${response.statusText}`);
+  //       }
+
+  //       const { follows } = await response.json();
+
+  //       if (follows) {
+  //         clearInterval(interval);
+
+  //         // Step 1: Fetch current points
+  //         const userId = session?.user?.name;
+  //         const { data: userData, error: fetchError } = await supabase
+  //           .from("users")
+  //           .select("points")
+  //           .eq("world_id", userId)
+  //           .single();
+
+  //         if (fetchError) {
+  //           console.error("Error fetching points:", fetchError.message);
+  //           return;
+  //         }
+
+  //         // Step 2: Calculate new points total
+  //         const currentPoints = userData?.points || 0;
+  //         const newPoints = currentPoints + 40;
+
+  //         // Step 3: Update points in the database
+  //         const { error: updateError } = await supabase
+  //           .from("users")
+  //           .update({ points: newPoints })
+  //           .eq("world_id", userId);
+
+  //         if (updateError) {
+  //           console.error(
+  //             "Error updating points in Supabase:",
+  //             updateError.message
+  //           );
+  //         } else {
+  //           console.log("Points updated successfully.");
+  //           setClickedTasks((prev) => ({ ...prev, twitter: true }));
+  //         }
+  //       } else if (retries >= maxRetries) {
+  //         clearInterval(interval);
+  //         console.log("Follow check timed out.");
+  //       }
+  //     } catch (error) {
+  //       // Type guard to check if the error is an instance of Error
+  //       if (error instanceof Error) {
+  //         console.error("Error checking follow status:", error.message);
+  //       } else {
+  //         console.error("An unknown error occurred:", error);
+  //       }
+  //       clearInterval(interval);
+  //     }
+  //   }, 5000); // Poll every 5 seconds
+  // };
 
   return (
     <div className="flex flex-col justify-items-center w-full text-[#07494E] gap-[8vw]">
@@ -215,7 +336,10 @@ const Options = () => {
 
           {/* Twitter Task */}
           <div
-            onClick={() => handleClick("twitter")}
+            onClick={() => {
+              handleClick("twitter");
+              handleFollow();
+            }}
             className={`flex items-center justify-between px-[3vw] py-[4.2vw] border-2 rounded-xl cursor-pointer border-[#07494E] bg-white ${
               !isEmailRegistered ? "opacity-50 cursor-not-allowed" : ""
             }`}
@@ -235,7 +359,10 @@ const Options = () => {
 
           {/* Purchase Task */}
           <div
-            onClick={() => handleClick("purchase")}
+            onClick={() => {
+              handleClick("purchase");
+              handlePurchaseClick();
+            }}
             className={`flex items-center justify-between px-[3vw] py-[4.2vw] border-2 rounded-xl cursor-pointer border-[#07494E] bg-white ${
               !isEmailRegistered ? "opacity-50 cursor-not-allowed" : ""
             }`}
