@@ -60,7 +60,7 @@ export async function GET(req: NextRequest) {
         throw new Error(`Failed to fetch user points: ${fetchError.message}`);
 
       // Increment points by 10
-      const newPoints = (userRecord?.points || 0) + 10;
+      const newPoints = (userRecord?.points || 0) + 25;
 
       // Update points in Supabase
       const { error: updateError } = await supabase
