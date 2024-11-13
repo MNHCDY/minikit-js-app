@@ -42,6 +42,10 @@ const Options = () => {
     purchase: false,
   });
 
+  const handleFollow = () => {
+    window.location.href = `/api/twitter/oauth`;
+  };
+
   useEffect(() => {
     const fetchTaskCompletionStatus = async () => {
       try {
@@ -357,7 +361,7 @@ const Options = () => {
           <div
             onClick={() => {
               handleClick("purchase");
-              handlePurchaseClick();
+              handleFollow();
             }}
             className={`flex items-center justify-between px-[3vw] py-[4.2vw] border-2 rounded-xl cursor-pointer border-[#07494E] bg-white ${
               !isEmailRegistered ? "opacity-50 cursor-not-allowed" : ""
