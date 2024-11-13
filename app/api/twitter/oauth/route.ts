@@ -1,24 +1,24 @@
-// app/api/twitter/oauth/route.ts
 import { TwitterApi } from "twitter-api-v2";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
-const CALLBACK_URL = `${process.env.NEXT_PUBLIC_APP_URL}/api/twitter/callback`;
-
 export async function GET() {
   const twitterClient = new TwitterApi({
-    clientId: process.env.TWITTER_CLIENT_ID!,
-    clientSecret: process.env.TWITTER_CLIENT_SECRET!,
+    appKey: process.env.TWITTER_API_KEY!,
+    appSecret: process.env.TWITTER_API_SECRET!,
   });
 
-  const { url, codeVerifier, state } = twitterClient.generateOAuth2AuthLink(
-    CALLBACK_URL,
-    { scope: ["tweet.read", "users.read", "follows.read"] }
+  // Generate the auth link with your callback URL
+  const { oauth_token, oauth_token_secret } =
+    await twitterClient.generateAuthLink(
+      `${process.env.NEXT_PUBLIC_APP_URL}/api/twitter/callback`
+    );
+
+  // Store oauth_token_secret in cookies
+  cookies().set("oauth_token_secret", oauth_token_secret);
+
+  // Redirect the user to Twitter for authentication
+  return NextResponse.redirect(
+    `https://api.twitter.com/oauth/authorize?oauth_token=${oauth_token}`
   );
-
-  // Store codeVerifier and state in cookies for verification upon callback
-  cookies().set("codeVerifier", codeVerifier);
-  cookies().set("state", state);
-
-  return NextResponse.redirect(url);
 }

@@ -64,16 +64,13 @@ export const SignIn = () => {
     if (session?.user?.name) {
       checkAndSaveTokenToSupabase(session.user.name);
       console.log(session.user.name);
-
-      // Redirect automatically after 5 seconds if signed in
-      const timer = setTimeout(() => {
-        router.push("/landing-page");
-      }, 5000);
-
-      // Cleanup the timer if the component is unmounted or session changes
-      return () => clearTimeout(timer);
+      router.push("/landing-page");
     }
   }, [session, router]);
+
+  const initiateOAuth = () => {
+    window.location.href = "/api/twitter/oauth"; // Redirect to the OAuth endpoint for Twitter
+  };
 
   if (session) {
     return (

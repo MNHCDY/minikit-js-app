@@ -6,26 +6,6 @@ import supabase from "../Supabase/supabaseClient";
 import { useSession } from "next-auth/react";
 import { TwitterApi } from "twitter-api-v2";
 
-async function checkIfUserFollows(
-  userId: string,
-  targetUserId: string
-): Promise<boolean> {
-  try {
-    const response = await fetch(
-      `/api/twitter?userId=${userId}&targetUserId=${targetUserId}`
-    );
-    if (!response.ok) {
-      throw new Error("Failed to check follow status");
-    }
-
-    const data = await response.json();
-    return data.follows;
-  } catch (error) {
-    console.error("Error checking follow status:", error);
-    return false;
-  }
-}
-
 type TaskType = "email" | "worldID" | "twitter" | "purchase";
 
 const Options = () => {
@@ -33,6 +13,7 @@ const Options = () => {
   const { data: session } = useSession();
   const [isEmailRegistered, setIsEmailRegistered] = useState(false);
   const [isCheckingPurchase, setIsCheckingPurchase] = useState(false);
+  const [tooltipMessage, setTooltipMessage] = useState<string | null>(null);
   const [clickedTasks, setClickedTasks] = useState<{
     email: boolean;
     twitter: boolean;
@@ -45,6 +26,25 @@ const Options = () => {
 
   const handleFollow = () => {
     window.location.href = `/api/twitter/oauth`;
+    // window.open("https://x.com/mnhcdy", "_blank");
+  };
+
+  const handleCallback = async () => {
+    try {
+      const response = await fetch("/api/twitter/callback", {
+        method: "GET",
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        setTooltipMessage(data.error); // Set the tooltip message
+        return;
+      }
+      console.log(tooltipMessage);
+      setTooltipMessage(null);
+    } catch (error) {
+      setTooltipMessage("An unexpected error occurred. Please try again.");
+    }
   };
 
   useEffect(() => {
@@ -108,23 +108,6 @@ const Options = () => {
 
       if (task === "email") {
         setIsEmailRegistered(true);
-      }
-
-      if (task === "twitter") {
-        window.open("https://x.com/mnhcdy", "_blank");
-        const { data: pointsData, error: pointsError } = await supabase
-          .from("users")
-          .update({ points: 20 })
-          .eq("world_id", worldId);
-
-        if (pointsError) {
-          console.error(
-            "Error updating points in Supabase:",
-            pointsError.message
-          );
-        } else {
-          console.log("Points updated successfully:", pointsData);
-        }
       }
 
       switch (task) {
@@ -220,83 +203,6 @@ const Options = () => {
     }
   };
 
-  // const handleClickTwitter = async () => {
-  //   const twitterUserId = "Manish27111"; // Replace with Twitter user ID from session data
-  //   const yourTwitterId = "mnhcdy"; // Replace with your Twitter account ID
-
-  //   // Redirect to Twitter
-  //   window.open("https://twitter.com/mnhcdy", "_blank");
-
-  //   let retries = 0;
-  //   const maxRetries = 12;
-  //   const interval = setInterval(async () => {
-  //     retries += 1;
-
-  //     try {
-  //       const response = await fetch(
-  //         `/api/checkTwitterFollow?userId=${encodeURIComponent(
-  //           twitterUserId
-  //         )}&targetUserId=${encodeURIComponent(yourTwitterId)}`
-  //       );
-
-  //       // Check if the response is OK before parsing
-  //       if (!response.ok) {
-  //         throw new Error(`Failed to fetch data: ${response.statusText}`);
-  //       }
-
-  //       const { follows } = await response.json();
-
-  //       if (follows) {
-  //         clearInterval(interval);
-
-  //         // Step 1: Fetch current points
-  //         const userId = session?.user?.name;
-  //         const { data: userData, error: fetchError } = await supabase
-  //           .from("users")
-  //           .select("points")
-  //           .eq("world_id", userId)
-  //           .single();
-
-  //         if (fetchError) {
-  //           console.error("Error fetching points:", fetchError.message);
-  //           return;
-  //         }
-
-  //         // Step 2: Calculate new points total
-  //         const currentPoints = userData?.points || 0;
-  //         const newPoints = currentPoints + 40;
-
-  //         // Step 3: Update points in the database
-  //         const { error: updateError } = await supabase
-  //           .from("users")
-  //           .update({ points: newPoints })
-  //           .eq("world_id", userId);
-
-  //         if (updateError) {
-  //           console.error(
-  //             "Error updating points in Supabase:",
-  //             updateError.message
-  //           );
-  //         } else {
-  //           console.log("Points updated successfully.");
-  //           setClickedTasks((prev) => ({ ...prev, twitter: true }));
-  //         }
-  //       } else if (retries >= maxRetries) {
-  //         clearInterval(interval);
-  //         console.log("Follow check timed out.");
-  //       }
-  //     } catch (error) {
-  //       // Type guard to check if the error is an instance of Error
-  //       if (error instanceof Error) {
-  //         console.error("Error checking follow status:", error.message);
-  //       } else {
-  //         console.error("An unknown error occurred:", error);
-  //       }
-  //       clearInterval(interval);
-  //     }
-  //   }, 5000); // Poll every 5 seconds
-  // };
-
   return (
     <div className="flex flex-col justify-items-center w-full text-[#07494E] gap-[8vw]">
       <div className="p-[5vw] flex flex-col gap-[4vw]">
@@ -342,8 +248,9 @@ const Options = () => {
           {/* Twitter Task */}
           <div
             onClick={() => {
-              handleClick("twitter");
               handleFollow();
+              handleClick("twitter");
+              handleCallback();
             }}
             className={`flex items-center justify-between px-[3vw] py-[4.2vw] border-2 rounded-xl cursor-pointer border-[#07494E] bg-white ${
               !isEmailRegistered ? "opacity-50 cursor-not-allowed" : ""
@@ -361,6 +268,11 @@ const Options = () => {
             </div>
             <span className="text-[#07494E] font-bold text-[5vw]">+25 pt</span>
           </div>
+          {tooltipMessage && (
+            <div className="absolute bg-red-100 text-red-800 p-2 rounded-md text-sm border border-red-300 mt-2 z-50">
+              {tooltipMessage}
+            </div>
+          )}
 
           {/* Purchase Task */}
           <div

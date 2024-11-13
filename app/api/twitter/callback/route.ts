@@ -1,99 +1,141 @@
-// app/api/twitter/callback/route.ts
 import { TwitterApi } from "twitter-api-v2";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import supabase from "@/components/Supabase/supabaseClient";
-
-const CALLBACK_URL = `${process.env.NEXT_PUBLIC_APP_URL}/api/twitter/callback`;
-const YOUR_TWITTER_USER_ID = "mnhcdy"; // Replace with your Twitter user ID
+import { authOptions } from "@/app/lib/auth";
+import { getServerSession } from "next-auth/next";
 
 export async function GET(req: NextRequest) {
+  const session = await getServerSession(authOptions);
+
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const { searchParams } = new URL(req.url);
-  const code = searchParams.get("code");
-  const state = searchParams.get("state");
+  const oauth_token = searchParams.get("oauth_token");
+  const oauth_verifier = searchParams.get("oauth_verifier");
 
-  // Retrieve cookies using Next.js `cookies` API
-  const codeVerifier = cookies().get("codeVerifier")?.value;
-  const storedState = cookies().get("state")?.value;
+  // Retrieve oauth_token_secret from cookies
+  const oauth_token_secret = cookies().get("oauth_token_secret")?.value;
 
-  // Verify state and codeVerifier
-  if (!codeVerifier || !storedState || storedState !== state) {
+  if (!oauth_token || !oauth_verifier || !oauth_token_secret) {
     return NextResponse.json(
-      { error: "Invalid OAuth request: state or codeVerifier mismatch" },
+      { error: "Invalid OAuth callback request" },
       { status: 400 }
     );
   }
 
-  // Initialize Twitter client for token exchange
-  const twitterClient = new TwitterApi({
-    clientId: process.env.TWITTER_CLIENT_ID!,
-    clientSecret: process.env.TWITTER_CLIENT_SECRET!,
-  });
-
   try {
-    // Complete OAuth2 login
-    const { client: loggedClient } = await twitterClient.loginWithOAuth2({
-      code: code as string,
-      codeVerifier: codeVerifier as string,
-      redirectUri: CALLBACK_URL,
+    const twitterClient = new TwitterApi({
+      appKey: process.env.TWITTER_API_KEY!,
+      appSecret: process.env.TWITTER_API_SECRET!,
+      accessToken: oauth_token,
+      accessSecret: oauth_token_secret,
     });
 
-    // Fetch authenticated user's info
-    const { data: user } = await loggedClient.v2.me();
+    // Obtain the access token and secret
+    const { client: loggedClient } = await twitterClient.login(oauth_verifier);
 
-    // Check if user follows your Twitter account
-    const { data: following } = await loggedClient.v2.following(user.id);
-    const isFollowing = following.some(
-      (followed) => followed.id === YOUR_TWITTER_USER_ID
-    );
+    // Fetch authenticated user's details
+    const user = await loggedClient.v1.verifyCredentials({
+      include_email: true,
+    });
+    console.log("user", user);
 
-    // If user follows, increment points in Supabase
-    if (isFollowing) {
-      // Fetch current points
-      const { data: userRecord, error: fetchError } = await supabase
-        .from("users")
-        .select("points")
-        .eq("world_id", user.id)
-        .single();
+    const { screen_name, id_str: twitterId } = user;
 
-      if (fetchError)
-        throw new Error(`Failed to fetch user points: ${fetchError.message}`);
+    if (!screen_name) {
+      return NextResponse.json(
+        { error: "Failed to retrieve screen_name from Twitter." },
+        { status: 400 }
+      );
+    }
 
-      // Increment points by 10
-      const newPoints = (userRecord?.points || 0) + 25;
+    const world_id = session?.user?.name;
 
-      // Update points in Supabase
+    if (!world_id) {
+      return NextResponse.json(
+        { error: "world_id not found in session" },
+        { status: 400 }
+      );
+    }
+
+    // Fetch user's current points from Supabase
+    const { data: userRecord, error: fetchError } = await supabase
+      .from("users")
+      .select("points")
+      .eq("world_id", world_id)
+      .single();
+
+    if (fetchError) {
+      console.error("Error fetching user data:", fetchError);
+      throw new Error(`Failed to fetch user data: ${fetchError.message}`);
+    }
+
+    // Check if the twitter_id already exists for a different user
+    const { data: existingUser, error: checkError } = await supabase
+      .from("users")
+      .select("world_id")
+      .eq("twitter_id", screen_name)
+      .single();
+
+    if (checkError && checkError.code !== "PGRST116") {
+      console.error("Error checking existing twitter_id:", checkError);
+      throw new Error(
+        `Failed to check existing twitter_id: ${checkError.message}`
+      );
+    }
+
+    if (existingUser && existingUser.world_id !== world_id) {
+      return NextResponse.json(
+        {
+          error: `Twitter ID ${screen_name} is already linked to another user. Please try different  Twitter ID`,
+        },
+        { status: 400 }
+      );
+    } else {
+      // Calculate new points
+      const currentPoints = userRecord?.points || 0;
+      const newPoints = currentPoints + 25;
+
+      // Update user's points and twitter_id in Supabase
       const { error: updateError } = await supabase
         .from("users")
-        .update({ points: newPoints })
-        .eq("world_id", user.id);
+        .update({ points: newPoints, twitter_id: screen_name })
+        .eq("world_id", world_id);
 
-      if (updateError)
-        throw new Error(`Failed to update user points: ${updateError.message}`);
-
-      // Clear cookies after successful verification
-      cookies().delete("codeVerifier");
-      cookies().delete("state");
-
-      return NextResponse.json({
-        success: true,
-        message: "Points added for following on Twitter!",
-      });
-    } else {
-      return NextResponse.json({
-        success: false,
-        message: "User is not following on Twitter.",
-      });
+      if (updateError) {
+        console.error("Error updating user data:", updateError);
+        throw new Error(`Failed to update user data: ${updateError.message}`);
+      }
     }
-  } catch (error) {
-    console.error("Twitter callback error:", error);
-    return NextResponse.json(
-      {
-        error: `Failed to authenticate with Twitter: ${
-          (error as Error).message
-        }`,
-      },
-      { status: 500 }
+
+    // Follow your account automatically
+    const targetAccountId = `${process.env.TARGET_TWITTER_ID}`;
+    console.log(targetAccountId); // Replace with your Twitter account ID
+    try {
+      await loggedClient.v1.createFriendship({ user_id: targetAccountId });
+      console.log(`User successfully followed account ${targetAccountId}`);
+    } catch (followError) {
+      return NextResponse.json(
+        {
+          error: "Failed to follow account. Please try again after some time.",
+        },
+        { status: 400 }
+      );
+    }
+
+    // Clear cookies
+    cookies().delete("oauth_token_secret");
+
+    return NextResponse.redirect(
+      `${process.env.NEXT_PUBLIC_APP_URL}/reward-page`
+    );
+  } catch (error: any) {
+    console.error("Error during Twitter callback:", error);
+    return NextResponse.redirect(
+      `${process.env.NEXT_PUBLIC_APP_URL}/reward-page`
     );
   }
 }
