@@ -85,12 +85,15 @@ export async function GET(req: NextRequest) {
         message: "User is not following on Twitter.",
       });
     }
-  } catch (error) {
-    console.error("Twitter callback error:", error);
+  } catch (error: any) {
+    if (error.response && error.response.data) {
+      console.error("Twitter API error details:", error.response.data);
+    }
+    console.error("Twitter callback error:", error.message || error);
     return NextResponse.json(
       {
         error: `Failed to authenticate with Twitter: ${
-          (error as Error).message
+          error.message || "Unknown error"
         }`,
       },
       { status: 500 }
