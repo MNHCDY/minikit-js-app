@@ -13,7 +13,7 @@ export default async function handler(
   });
 
   const { url, codeVerifier, state } = twitterClient.generateOAuth2AuthLink(
-    `${process.env.NEXT_PUBLIC_APP_URL}/api/twitter/callback`, // Replace with your app's callback URL
+    `${process.env.NEXT_PUBLIC_APP_URL}/api/twitter/callback`,
     { scope: ["tweet.read", "users.read", "follows.read"] }
   );
 
