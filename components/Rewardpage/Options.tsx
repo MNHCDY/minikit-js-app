@@ -32,6 +32,7 @@ const Options = () => {
   const router = useRouter();
   const { data: session } = useSession();
   const [isEmailRegistered, setIsEmailRegistered] = useState(false);
+  const [isCheckingPurchase, setIsCheckingPurchase] = useState(false);
   const [clickedTasks, setClickedTasks] = useState<{
     email: boolean;
     twitter: boolean;
@@ -147,9 +148,10 @@ const Options = () => {
   };
 
   const pollForPurchaseSuccess = async () => {
-    const userId = session?.user?.name; // Replace with the unique identifier for the user
+    const userId = session?.user?.name;
 
-    // Poll every 5 seconds for up to 1 minute to check if the purchase was successful
+    setIsCheckingPurchase(true); // Set loading state
+
     const maxRetries = 20;
     let retries = 0;
     const interval = setInterval(async () => {
@@ -164,19 +166,22 @@ const Options = () => {
       if (error) {
         console.error("Error checking purchase status:", error);
         clearInterval(interval);
+        setIsCheckingPurchase(false);
         return;
       }
 
       if (data?.purchase_completed) {
         clearInterval(interval);
-        await updatePoints(40); // Update with 40 points on successful purchase
+        await updatePoints(40);
         setClickedTasks((prev) => ({ ...prev, purchase: true }));
         console.log("Purchase detected and points updated.");
+        setIsCheckingPurchase(false); // Reset loading state
       } else if (retries >= maxRetries) {
         clearInterval(interval);
         console.log("Purchase not detected within the timeout period.");
+        setIsCheckingPurchase(false); // Reset loading state
       }
-    }, 5000); // Poll every 5 seconds
+    }, 5000);
   };
 
   const updatePoints = async (points: number) => {
