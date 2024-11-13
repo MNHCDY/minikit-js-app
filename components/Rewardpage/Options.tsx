@@ -215,82 +215,82 @@ const Options = () => {
     }
   };
 
-  const handleClickTwitter = async () => {
-    const twitterUserId = "Manish27111"; // Replace with Twitter user ID from session data
-    const yourTwitterId = "mnhcdy"; // Replace with your Twitter account ID
+  // const handleClickTwitter = async () => {
+  //   const twitterUserId = "Manish27111"; // Replace with Twitter user ID from session data
+  //   const yourTwitterId = "mnhcdy"; // Replace with your Twitter account ID
 
-    // Redirect to Twitter
-    window.open("https://twitter.com/mnhcdy", "_blank");
+  //   // Redirect to Twitter
+  //   window.open("https://twitter.com/mnhcdy", "_blank");
 
-    let retries = 0;
-    const maxRetries = 12;
-    const interval = setInterval(async () => {
-      retries += 1;
+  //   let retries = 0;
+  //   const maxRetries = 12;
+  //   const interval = setInterval(async () => {
+  //     retries += 1;
 
-      try {
-        const response = await fetch(
-          `/api/checkTwitterFollow?userId=${encodeURIComponent(
-            twitterUserId
-          )}&targetUserId=${encodeURIComponent(yourTwitterId)}`
-        );
+  //     try {
+  //       const response = await fetch(
+  //         `/api/checkTwitterFollow?userId=${encodeURIComponent(
+  //           twitterUserId
+  //         )}&targetUserId=${encodeURIComponent(yourTwitterId)}`
+  //       );
 
-        // Check if the response is OK before parsing
-        if (!response.ok) {
-          throw new Error(`Failed to fetch data: ${response.statusText}`);
-        }
+  //       // Check if the response is OK before parsing
+  //       if (!response.ok) {
+  //         throw new Error(`Failed to fetch data: ${response.statusText}`);
+  //       }
 
-        const { follows } = await response.json();
+  //       const { follows } = await response.json();
 
-        if (follows) {
-          clearInterval(interval);
+  //       if (follows) {
+  //         clearInterval(interval);
 
-          // Step 1: Fetch current points
-          const userId = session?.user?.name;
-          const { data: userData, error: fetchError } = await supabase
-            .from("users")
-            .select("points")
-            .eq("world_id", userId)
-            .single();
+  //         // Step 1: Fetch current points
+  //         const userId = session?.user?.name;
+  //         const { data: userData, error: fetchError } = await supabase
+  //           .from("users")
+  //           .select("points")
+  //           .eq("world_id", userId)
+  //           .single();
 
-          if (fetchError) {
-            console.error("Error fetching points:", fetchError.message);
-            return;
-          }
+  //         if (fetchError) {
+  //           console.error("Error fetching points:", fetchError.message);
+  //           return;
+  //         }
 
-          // Step 2: Calculate new points total
-          const currentPoints = userData?.points || 0;
-          const newPoints = currentPoints + 40;
+  //         // Step 2: Calculate new points total
+  //         const currentPoints = userData?.points || 0;
+  //         const newPoints = currentPoints + 40;
 
-          // Step 3: Update points in the database
-          const { error: updateError } = await supabase
-            .from("users")
-            .update({ points: newPoints })
-            .eq("world_id", userId);
+  //         // Step 3: Update points in the database
+  //         const { error: updateError } = await supabase
+  //           .from("users")
+  //           .update({ points: newPoints })
+  //           .eq("world_id", userId);
 
-          if (updateError) {
-            console.error(
-              "Error updating points in Supabase:",
-              updateError.message
-            );
-          } else {
-            console.log("Points updated successfully.");
-            setClickedTasks((prev) => ({ ...prev, twitter: true }));
-          }
-        } else if (retries >= maxRetries) {
-          clearInterval(interval);
-          console.log("Follow check timed out.");
-        }
-      } catch (error) {
-        // Type guard to check if the error is an instance of Error
-        if (error instanceof Error) {
-          console.error("Error checking follow status:", error.message);
-        } else {
-          console.error("An unknown error occurred:", error);
-        }
-        clearInterval(interval);
-      }
-    }, 5000); // Poll every 5 seconds
-  };
+  //         if (updateError) {
+  //           console.error(
+  //             "Error updating points in Supabase:",
+  //             updateError.message
+  //           );
+  //         } else {
+  //           console.log("Points updated successfully.");
+  //           setClickedTasks((prev) => ({ ...prev, twitter: true }));
+  //         }
+  //       } else if (retries >= maxRetries) {
+  //         clearInterval(interval);
+  //         console.log("Follow check timed out.");
+  //       }
+  //     } catch (error) {
+  //       // Type guard to check if the error is an instance of Error
+  //       if (error instanceof Error) {
+  //         console.error("Error checking follow status:", error.message);
+  //       } else {
+  //         console.error("An unknown error occurred:", error);
+  //       }
+  //       clearInterval(interval);
+  //     }
+  //   }, 5000); // Poll every 5 seconds
+  // };
 
   return (
     <div className="flex flex-col justify-items-center w-full text-[#07494E] gap-[8vw]">
@@ -338,7 +338,7 @@ const Options = () => {
           <div
             onClick={() => {
               handleClick("twitter");
-              handleClickTwitter();
+              handleFollow();
             }}
             className={`flex items-center justify-between px-[3vw] py-[4.2vw] border-2 rounded-xl cursor-pointer border-[#07494E] bg-white ${
               !isEmailRegistered ? "opacity-50 cursor-not-allowed" : ""
@@ -361,7 +361,7 @@ const Options = () => {
           <div
             onClick={() => {
               handleClick("purchase");
-              handleFollow();
+              handlePurchaseClick();
             }}
             className={`flex items-center justify-between px-[3vw] py-[4.2vw] border-2 rounded-xl cursor-pointer border-[#07494E] bg-white ${
               !isEmailRegistered ? "opacity-50 cursor-not-allowed" : ""
