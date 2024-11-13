@@ -1,25 +1,27 @@
-// pages/api/twitter/callback.ts
+// app/api/twitter/callback/route.ts
 import { TwitterApi } from "twitter-api-v2";
-import { getCookie, deleteCookie } from "cookies-next";
-import { NextApiRequest, NextApiResponse } from "next";
+import { cookies } from "next/headers";
+import { NextRequest, NextResponse } from "next/server";
 import supabase from "@/components/Supabase/supabaseClient";
 
 const CALLBACK_URL = `${process.env.NEXT_PUBLIC_APP_URL}/api/twitter/callback`;
-const YOUR_TWITTER_USER_ID = "YOUR_TWITTER_USER_ID"; // Replace with your Twitter user ID
+const YOUR_TWITTER_USER_ID = "mnhcdy"; // Replace with your Twitter user ID
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  const { code, state } = req.query;
-  const codeVerifier = getCookie("codeVerifier", { req, res });
-  const storedState = getCookie("state", { req, res });
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const code = searchParams.get("code");
+  const state = searchParams.get("state");
+
+  // Retrieve cookies using Next.js `cookies` API
+  const codeVerifier = cookies().get("codeVerifier")?.value;
+  const storedState = cookies().get("state")?.value;
 
   // Verify state and codeVerifier
   if (!codeVerifier || !storedState || storedState !== state) {
-    return res
-      .status(400)
-      .json({ error: "Invalid OAuth request: state or codeVerifier mismatch" });
+    return NextResponse.json(
+      { error: "Invalid OAuth request: state or codeVerifier mismatch" },
+      { status: 400 }
+    );
   }
 
   // Initialize Twitter client for token exchange
@@ -70,28 +72,28 @@ export default async function handler(
         throw new Error(`Failed to update user points: ${updateError.message}`);
 
       // Clear cookies after successful verification
-      deleteCookie("codeVerifier", { req, res });
-      deleteCookie("state", { req, res });
+      cookies().delete("codeVerifier");
+      cookies().delete("state");
 
-      return res
-        .status(200)
-        .json({
-          success: true,
-          message: "Points added for following on Twitter!",
-        });
+      return NextResponse.json({
+        success: true,
+        message: "Points added for following on Twitter!",
+      });
     } else {
-      return res
-        .status(200)
-        .json({ success: false, message: "User is not following on Twitter." });
+      return NextResponse.json({
+        success: false,
+        message: "User is not following on Twitter.",
+      });
     }
   } catch (error) {
     console.error("Twitter callback error:", error);
-    return res
-      .status(500)
-      .json({
+    return NextResponse.json(
+      {
         error: `Failed to authenticate with Twitter: ${
           (error as Error).message
         }`,
-      });
+      },
+      { status: 500 }
+    );
   }
 }
