@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import supabase from "@/components/Supabase/supabaseClient";
 
 const CALLBACK_URL = `${process.env.NEXT_PUBLIC_APP_URL}/api/twitter/callback`;
-const YOUR_TWITTER_USER_ID = "1854763127466078208MNHCDY"; // Replace with your Twitter user ID
+const YOUR_TWITTER_USER_ID = "895315062864269314"; // Replace with your Twitter user ID
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
