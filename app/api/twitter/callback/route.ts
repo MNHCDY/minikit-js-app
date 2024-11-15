@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import supabase from "@/components/Supabase/supabaseClient";
 
-const CALLBACK_URL = `${process.env.NEXT_PUBLIC_APP_URL}/api/twitter/callback`;
+const CALLBACK_URL = `${process.env.NEXT_PUBLIC_APP_URL}`;
 const YOUR_TWITTER_USER_ID = "895315062864269314"; // Replace with your Twitter user ID
 
 export async function GET(req: NextRequest) {
@@ -45,6 +45,7 @@ export async function GET(req: NextRequest) {
     console.log("is it stop here 2");
     // Check if user follows your Twitter account
     const { data: following } = await loggedClient.v2.following(user.id);
+
     console.log("getting the following", following);
     const isFollowing = following.some(
       (followed) => followed.id === YOUR_TWITTER_USER_ID

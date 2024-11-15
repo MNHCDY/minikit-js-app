@@ -75,6 +75,10 @@ export const SignIn = () => {
     }
   }, [session, router]);
 
+  const initiateOAuth = () => {
+    window.location.href = "/api/twitter/oauth"; // Redirect to the OAuth endpoint for Twitter
+  };
+
   if (session) {
     return (
       <>
@@ -91,6 +95,8 @@ export const SignIn = () => {
       <>
         Not signed in <br />
         <button onClick={() => signIn()}>Sign in</button>
+        <br />
+        <button onClick={initiateOAuth}>Sign in with Twitter</button>
       </>
     );
   }
