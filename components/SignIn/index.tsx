@@ -95,8 +95,6 @@ export const SignIn = () => {
       <>
         Not signed in <br />
         <button onClick={() => signIn()}>Sign in</button>
-        <br />
-        <button onClick={initiateOAuth}>Sign in with Twitter</button>
       </>
     );
   }
