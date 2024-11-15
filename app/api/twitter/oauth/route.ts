@@ -10,9 +10,7 @@ export async function GET() {
 
   // Generate the auth link with your callback URL
   const { oauth_token, oauth_token_secret } =
-    await twitterClient.generateAuthLink(
-      `${process.env.NEXT_PUBLIC_APP_URL}/api/twitter/callback`
-    );
+    await twitterClient.generateAuthLink(`${process.env.NEXT_PUBLIC_APP_URL}`);
 
   // Store oauth_token_secret in cookies
   cookies().set("oauth_token_secret", oauth_token_secret);
