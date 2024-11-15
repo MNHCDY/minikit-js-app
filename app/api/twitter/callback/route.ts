@@ -2,13 +2,20 @@ import { TwitterApi } from "twitter-api-v2";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import supabase from "@/components/Supabase/supabaseClient";
-import { useSession } from "next-auth/react";
+
+import { authOptions } from "@/app/lib/auth";
+import { getServerSession } from "next-auth/next";
 
 export async function GET(req: NextRequest) {
+  const session = await getServerSession(authOptions);
+
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const { searchParams } = new URL(req.url);
   const oauth_token = searchParams.get("oauth_token");
   const oauth_verifier = searchParams.get("oauth_verifier");
-  const { data: session } = useSession();
 
   // Retrieve oauth_token_secret from cookies
   const oauth_token_secret = cookies().get("oauth_token_secret")?.value;
