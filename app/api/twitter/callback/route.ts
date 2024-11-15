@@ -90,6 +90,7 @@ export async function GET(req: NextRequest) {
       console.error("Twitter API error details:", error.response.data);
     }
     console.error("Twitter callback error:", error.message || error);
+    console.log(JSON.stringify(error));
     return NextResponse.json(
       {
         error: `Failed to authenticate with Twitter: ${
