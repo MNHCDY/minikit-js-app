@@ -37,6 +37,7 @@ export async function GET(req: NextRequest) {
       codeVerifier: codeVerifier as string,
       redirectUri: CALLBACK_URL,
     });
+    console.log("is it stop here");
 
     // Fetch authenticated user's info
     const { data: user } = await loggedClient.v2.me();
