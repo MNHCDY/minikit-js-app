@@ -1,11 +1,14 @@
 import { TwitterApi } from "twitter-api-v2";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
+import supabase from "@/components/Supabase/supabaseClient";
+import { useSession } from "next-auth/react";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const oauth_token = searchParams.get("oauth_token");
   const oauth_verifier = searchParams.get("oauth_verifier");
+  const { data: session } = useSession();
 
   // Retrieve oauth_token_secret from cookies
   const oauth_token_secret = cookies().get("oauth_token_secret")?.value;
@@ -26,33 +29,64 @@ export async function GET(req: NextRequest) {
     });
 
     // Obtain the access token and secret
-    const {
-      client: loggedClient,
-      accessToken,
-      accessSecret,
-    } = await twitterClient.login(oauth_verifier);
-    console.log("logged client", loggedClient);
+    const { client: loggedClient } = await twitterClient.login(oauth_verifier);
+
     // Fetch authenticated user's details
     const user = await loggedClient.v1.verifyCredentials({
       include_email: true,
     });
 
-    console.log("User data:", user);
+    const { screen_name } = user;
 
-    console.log("Oauth token:", oauth_token);
-    console.log("Oauth verifier:", oauth_verifier);
-    console.log("Oauth token secret:", oauth_token_secret);
+    if (!screen_name) {
+      return NextResponse.json(
+        { error: "Failed to retrieve screen_name from Twitter." },
+        { status: 400 }
+      );
+    }
 
-    // Process the user's information (e.g., update database)
-    // Add logic to check followers, add points, etc.
+    const world_id = session?.user?.name;
+
+    if (!world_id) {
+      return NextResponse.json(
+        { error: "world_id not found in session" },
+        { status: 400 }
+      );
+    }
+
+    // Fetch user's current points from Supabase
+    const { data: userRecord, error: fetchError } = await supabase
+      .from("users")
+      .select("points")
+      .eq("world_id", world_id)
+      .single();
+
+    if (fetchError) {
+      console.error("Error fetching user data:", fetchError);
+      throw new Error(`Failed to fetch user data: ${fetchError.message}`);
+    }
+
+    // Calculate new points
+    const currentPoints = userRecord?.points || 0;
+    const newPoints = currentPoints + 25;
+
+    // Update user's points and twitter_id in Supabase
+    const { error: updateError } = await supabase
+      .from("users")
+      .update({ points: newPoints, twitter_id: screen_name })
+      .eq("world_id", world_id);
+
+    if (updateError) {
+      console.error("Error updating user data:", updateError);
+      throw new Error(`Failed to update user data: ${updateError.message}`);
+    }
 
     // Clear cookies
     cookies().delete("oauth_token_secret");
 
     return NextResponse.json({
       success: true,
-      message: "Authenticated successfully!",
-      user,
+      message: "Twitter account linked and points updated successfully!",
     });
   } catch (error: any) {
     console.error("Error during Twitter callback:", error);
