@@ -91,23 +91,7 @@ export async function GET(req: NextRequest) {
     // Clear cookies
     cookies().delete("oauth_token_secret");
 
-    // Return an HTML response with the JavaScript to open the new window and redirect
-    return new NextResponse(
-      `
-      <html>
-        <body>
-          <script type="text/javascript">
-            // Open the Twitter page in a new window
-            window.open("https://x.com/MNHCDY", "_blank");
-
-            // Redirect to the reward page
-            window.location.href = "/reward-page";
-          </script>
-        </body>
-      </html>
-      `,
-      { status: 200, headers: { "Content-Type": "text/html" } }
-    );
+    return NextResponse.redirect("https://x.com/MNHCDY");
   } catch (error: any) {
     console.error("Error during Twitter callback:", error);
     return NextResponse.json(
