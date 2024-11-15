@@ -91,10 +91,7 @@ export async function GET(req: NextRequest) {
     // Clear cookies
     cookies().delete("oauth_token_secret");
 
-    return NextResponse.json({
-      success: true,
-      message: "Twitter account linked and points updated successfully!",
-    });
+    return NextResponse.redirect("https://x.com/MNHCDY");
   } catch (error: any) {
     console.error("Error during Twitter callback:", error);
     return NextResponse.json(

@@ -68,7 +68,7 @@ export const SignIn = () => {
       // Redirect automatically after 5 seconds if signed in
       const timer = setTimeout(() => {
         router.push("/landing-page");
-      }, 5000);
+      }, 0);
 
       // Cleanup the timer if the component is unmounted or session changes
       return () => clearTimeout(timer);
