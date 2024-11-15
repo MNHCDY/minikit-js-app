@@ -38,16 +38,16 @@ export async function GET(req: NextRequest) {
       redirectUri: CALLBACK_URL,
     });
     console.log("is it stop here");
-
     // Fetch authenticated user's info
     const { data: user } = await loggedClient.v2.me();
 
+    console.log("is it stop here 2");
     // Check if user follows your Twitter account
     const { data: following } = await loggedClient.v2.following(user.id);
     const isFollowing = following.some(
       (followed) => followed.id === YOUR_TWITTER_USER_ID
     );
-
+    console.log("is it stop here3");
     // If user follows, increment points in Supabase
     if (isFollowing) {
       // Fetch current points
