@@ -232,9 +232,10 @@ const Options = () => {
               handleFollow();
               handleClick("twitter");
             }}
-            className={`flex items-center justify-between px-[3vw] py-[4.2vw] border-2 rounded-xl cursor-pointer border-[#07494E] bg-white `}
+            className={`flex items-center justify-between px-[3vw] py-[4.2vw] border-2 rounded-xl cursor-pointer border-[#07494E] bg-white ${
+              !isEmailRegistered ? "opacity-50 cursor-not-allowed" : ""
+            }`}
           >
-            ${!isEmailRegistered ? "opacity-50 cursor-not-allowed" : ""}
             <div className="flex items-center space-x-3">
               <div
                 className={`w-5 h-5 rounded-full border-2 border-[#07494E] flex items-center justify-center ${
