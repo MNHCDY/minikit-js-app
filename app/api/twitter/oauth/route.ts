@@ -3,7 +3,7 @@ import { TwitterApi } from "twitter-api-v2";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
-const CALLBACK_URL = `${process.env.NEXT_PUBLIC_APP_URL}/api/twitter/callback`;
+const CALLBACK_URL = `${process.env.NEXT_PUBLIC_APP_URL}`;
 
 export async function GET() {
   const twitterClient = new TwitterApi({
