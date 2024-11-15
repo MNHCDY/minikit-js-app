@@ -31,13 +31,17 @@ export async function GET(req: NextRequest) {
       accessToken,
       accessSecret,
     } = await twitterClient.login(oauth_verifier);
-
+    console.log("logged client", loggedClient);
     // Fetch authenticated user's details
     const user = await loggedClient.v1.verifyCredentials({
       include_email: true,
     });
 
     console.log("User data:", user);
+
+    console.log("Oauth token:", oauth_token);
+    console.log("Oauth verifier:", oauth_verifier);
+    console.log("Oauth token secret:", oauth_token_secret);
 
     // Process the user's information (e.g., update database)
     // Add logic to check followers, add points, etc.
