@@ -91,7 +91,9 @@ export async function GET(req: NextRequest) {
     // Clear cookies
     cookies().delete("oauth_token_secret");
 
-    return NextResponse.redirect("https://x.com/MNHCDY");
+    return NextResponse.redirect(
+      `${process.env.NEXT_PUBLIC_APP_URL}/reward-page`
+    );
   } catch (error: any) {
     console.error("Error during Twitter callback:", error);
     return NextResponse.json(
