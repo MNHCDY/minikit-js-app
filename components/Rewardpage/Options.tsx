@@ -25,7 +25,7 @@ const Options = () => {
 
   const handleFollow = () => {
     window.location.href = `/api/twitter/oauth`;
-    window.open("https://x.com/mnhcdy", "_blank");
+    // window.open("https://x.com/mnhcdy", "_blank");
   };
 
   useEffect(() => {

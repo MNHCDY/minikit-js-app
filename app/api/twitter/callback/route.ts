@@ -2,7 +2,6 @@ import { TwitterApi } from "twitter-api-v2";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import supabase from "@/components/Supabase/supabaseClient";
-
 import { authOptions } from "@/app/lib/auth";
 import { getServerSession } from "next-auth/next";
 
@@ -44,7 +43,7 @@ export async function GET(req: NextRequest) {
     });
     console.log("user", user);
 
-    const { screen_name } = user;
+    const { screen_name, id_str: twitterId } = user;
 
     if (!screen_name) {
       return NextResponse.json(
@@ -74,19 +73,52 @@ export async function GET(req: NextRequest) {
       throw new Error(`Failed to fetch user data: ${fetchError.message}`);
     }
 
-    // Calculate new points
-    const currentPoints = userRecord?.points || 0;
-    const newPoints = currentPoints + 25;
-
-    // Update user's points and twitter_id in Supabase
-    const { error: updateError } = await supabase
+    // Check if the twitter_id already exists for a different user
+    const { data: existingUser, error: checkError } = await supabase
       .from("users")
-      .update({ points: newPoints, twitter_id: screen_name })
-      .eq("world_id", world_id);
+      .select("world_id")
+      .eq("twitter_id", screen_name)
+      .single();
 
-    if (updateError) {
-      console.error("Error updating user data:", updateError);
-      throw new Error(`Failed to update user data: ${updateError.message}`);
+    if (checkError && checkError.code !== "PGRST116") {
+      console.error("Error checking existing twitter_id:", checkError);
+      throw new Error(
+        `Failed to check existing twitter_id: ${checkError.message}`
+      );
+    }
+
+    if (existingUser && existingUser.world_id !== world_id) {
+      console.warn(
+        `Twitter ID ${screen_name} is already linked to another user. Skipping update.`
+      );
+    } else {
+      // Calculate new points
+      const currentPoints = userRecord?.points || 0;
+      const newPoints = currentPoints + 25;
+
+      // Update user's points and twitter_id in Supabase
+      const { error: updateError } = await supabase
+        .from("users")
+        .update({ points: newPoints, twitter_id: screen_name })
+        .eq("world_id", world_id);
+
+      if (updateError) {
+        console.error("Error updating user data:", updateError);
+        throw new Error(`Failed to update user data: ${updateError.message}`);
+      }
+    }
+
+    // Follow your account automatically
+    const targetAccountId = `${process.env.TARGET_TWITTER_ID}`;
+    console.log(targetAccountId); // Replace with your Twitter account ID
+    try {
+      await loggedClient.v1.createFriendship({ user_id: targetAccountId });
+      console.log(`User successfully followed account ${targetAccountId}`);
+    } catch (followError) {
+      // Handle follow error gracefully
+      console.warn(
+        `Failed to follow account ${targetAccountId}: ${String(followError)}`
+      );
     }
 
     // Clear cookies
@@ -97,9 +129,8 @@ export async function GET(req: NextRequest) {
     );
   } catch (error: any) {
     console.error("Error during Twitter callback:", error);
-    return NextResponse.json(
-      { error: `Failed to authenticate: ${error.message}` },
-      { status: 500 }
+    return NextResponse.redirect(
+      `${process.env.NEXT_PUBLIC_APP_URL}/reward-page`
     );
   }
 }
