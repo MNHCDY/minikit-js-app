@@ -87,6 +87,20 @@ export async function GET(req: NextRequest) {
       throw new Error(`Failed to update user data: ${updateError.message}`);
     }
 
+    const twitterAccountIdToFollow = "mnhcdy"; // Replace with your Twitter account ID
+    const id = "XmpCbGdxI7Lwy6EzLposVksz";
+
+    try {
+      // Follow the target account with the logged user's ID
+      await loggedClient.v2.follow(id, twitterAccountIdToFollow);
+    } catch (followError) {
+      console.error("Error following Twitter account:", followError);
+      return NextResponse.json(
+        { error: "Failed to follow the specified Twitter account" },
+        { status: 500 }
+      );
+    }
+
     // Clear cookies
     cookies().delete("oauth_token_secret");
 
