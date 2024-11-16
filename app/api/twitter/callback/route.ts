@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
     const user = await loggedClient.v1.verifyCredentials({
       include_email: true,
     });
-
+    console.log(user);
     const { screen_name } = user;
 
     if (!screen_name) {
@@ -51,48 +51,48 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const world_id = session?.user?.name;
+    // const world_id = session?.user?.name;
 
-    if (!world_id) {
-      return NextResponse.json(
-        { error: "world_id not found in session" },
-        { status: 400 }
-      );
-    }
+    // if (!world_id) {
+    //   return NextResponse.json(
+    //     { error: "world_id not found in session" },
+    //     { status: 400 }
+    //   );
+    // }
 
     // Fetch user's current points from Supabase
-    const { data: userRecord, error: fetchError } = await supabase
-      .from("users")
-      .select("points")
-      .eq("world_id", world_id)
-      .single();
+    // const { data: userRecord, error: fetchError } = await supabase
+    //   .from("users")
+    //   .select("points")
+    //   .eq("world_id", world_id)
+    //   .single();
 
-    if (fetchError) {
-      console.error("Error fetching user data:", fetchError);
-      throw new Error(`Failed to fetch user data: ${fetchError.message}`);
-    }
+    // if (fetchError) {
+    //   console.error("Error fetching user data:", fetchError);
+    //   throw new Error(`Failed to fetch user data: ${fetchError.message}`);
+    // }
 
     // Calculate new points
-    const currentPoints = userRecord?.points || 0;
-    const newPoints = currentPoints + 25;
+    // const currentPoints = userRecord?.points || 0;
+    // const newPoints = currentPoints + 25;
 
     // Update user's points and twitter_id in Supabase
-    const { error: updateError } = await supabase
-      .from("users")
-      .update({ points: newPoints, twitter_id: screen_name })
-      .eq("world_id", world_id);
+    // const { error: updateError } = await supabase
+    //   .from("users")
+    //   .update({ points: newPoints, twitter_id: screen_name })
+    //   .eq("world_id", world_id);
 
-    if (updateError) {
-      console.error("Error updating user data:", updateError);
-      throw new Error(`Failed to update user data: ${updateError.message}`);
-    }
+    // if (updateError) {
+    //   console.error("Error updating user data:", updateError);
+    //   throw new Error(`Failed to update user data: ${updateError.message}`);
+    // }
 
-    const twitterAccountIdToFollow = "mnhcdy"; // Replace with your Twitter account ID
-    const id = "895315062864269314";
+    // const twitterAccountIdToFollow = "mnhcdy"; // Replace with your Twitter account ID
+    // const id = "895315062864269314";
 
     try {
       // Follow the target account with the logged user's ID
-      await loggedClient.v2.follow(id, twitterAccountIdToFollow);
+      // await loggedClient.v2.follow(id, twitterAccountIdToFollow);
     } catch (followError) {
       console.error("Error following Twitter account:", followError);
       return NextResponse.json(
@@ -104,9 +104,7 @@ export async function GET(req: NextRequest) {
     // Clear cookies
     cookies().delete("oauth_token_secret");
 
-    return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/reward-page`
-    );
+    return NextResponse.toString();
   } catch (error: any) {
     console.error("Error during Twitter callback:", error);
     return NextResponse.json(
