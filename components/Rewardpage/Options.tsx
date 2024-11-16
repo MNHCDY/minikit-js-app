@@ -32,7 +32,7 @@ const Options = () => {
     if (isEmailRegistered) {
       // Open Twitter follow link in a new tab
       window.open(
-        "https://twitter.com/intent/follow?screen_name=YourAccountName",
+        "https://twitter.com/intent/follow?screen_name=mnhcdy",
         "_blank"
       );
 

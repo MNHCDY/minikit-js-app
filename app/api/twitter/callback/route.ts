@@ -88,7 +88,7 @@ export async function GET(req: NextRequest) {
     }
 
     const twitterAccountIdToFollow = "mnhcdy"; // Replace with your Twitter account ID
-    const id = "XmpCbGdxI7Lwy6EzLposVksz";
+    const id = "895315062864269314";
 
     try {
       // Follow the target account with the logged user's ID
