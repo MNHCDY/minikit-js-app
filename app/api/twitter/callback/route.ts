@@ -2,7 +2,6 @@ import { TwitterApi } from "twitter-api-v2";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import supabase from "@/components/Supabase/supabaseClient";
-
 import { authOptions } from "@/app/lib/auth";
 import { getServerSession } from "next-auth/next";
 
