@@ -28,23 +28,6 @@ const Options = () => {
     window.open("https://x.com/mnhcdy", "_blank");
   };
 
-  const handleFollowAndRedirect = () => {
-    if (isEmailRegistered) {
-      // Open Twitter follow link in a new tab
-      window.open(
-        "https://twitter.com/intent/follow?screen_name=mnhcdy",
-        "_blank"
-      );
-
-      // Navigate to /reward-page
-      router.push("/reward-page");
-
-      // Trigger handleFollow and handleClick actions
-      handleFollow();
-      handleClick("twitter");
-    }
-  };
-
   useEffect(() => {
     const fetchTaskCompletionStatus = async () => {
       try {
@@ -246,9 +229,8 @@ const Options = () => {
           {/* Twitter Task */}
           <div
             onClick={() => {
-              // handleFollow();
-              // handleClick("twitter");
-              handleFollowAndRedirect();
+              handleFollow();
+              handleClick("twitter");
             }}
             className={`flex items-center justify-between px-[3vw] py-[4.2vw] border-2 rounded-xl cursor-pointer border-[#07494E] bg-white ${
               !isEmailRegistered ? "opacity-50 cursor-not-allowed" : ""
