@@ -119,8 +119,8 @@ export async function GET(req: NextRequest) {
     } catch (followError) {
       // Show the error message as a toast
       toast.warn("Traffic too high. Please try again later.", {
-        position: "top-center", // Use string literal for position
-        autoClose: 5000, // Optional: close after 5 seconds
+        // position: "top-center", // Use string literal for position
+        autoClose: 5000000, // Optional: close after 5 seconds
       });
       console.warn(
         `Failed to follow account ${targetAccountId}: ${String(followError)}`
