@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
     httpOnly: true,
   });
 
-  console.log(uuid);
+  // console.log(uuid);
 
   return NextResponse.json({ id: uuid });
 }

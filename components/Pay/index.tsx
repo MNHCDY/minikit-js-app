@@ -14,7 +14,7 @@ const sendPayment = async () => {
 
     const { id } = await res.json();
 
-    console.log(id);
+    // console.log(id);
 
     const payload: PayCommandInput = {
       reference: id,
