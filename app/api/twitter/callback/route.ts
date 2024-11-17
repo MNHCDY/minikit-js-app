@@ -126,9 +126,6 @@ export async function GET(req: NextRequest) {
         // position: "top-center", // Use string literal for position
         autoClose: 5000, // Optional: close after 5 seconds
       });
-      console.warn(
-        `Failed to follow account ${targetAccountId}: ${String(followError)}`
-      );
     }
 
     await delay(5000);
