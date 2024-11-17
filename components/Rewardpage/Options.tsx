@@ -31,7 +31,7 @@ const Options = () => {
 
   const handleCallback = async () => {
     try {
-      const response = await fetch("/api/twitter-callback", {
+      const response = await fetch("/api/twitter/callback", {
         method: "GET",
       });
 
@@ -40,9 +40,8 @@ const Options = () => {
         setTooltipMessage(data.error); // Set the tooltip message
         return;
       }
-
+      console.log(tooltipMessage);
       setTooltipMessage(null);
-      window.location.href = "/reward-page";
     } catch (error) {
       setTooltipMessage("An unexpected error occurred. Please try again.");
     }
