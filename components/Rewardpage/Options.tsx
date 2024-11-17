@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { FaArrowLeft } from "react-icons/fa6";
 import supabase from "../Supabase/supabaseClient";
 import { useSession } from "next-auth/react";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 type TaskType = "email" | "worldID" | "twitter" | "purchase";
 
@@ -182,6 +184,50 @@ const Options = () => {
       console.error("Error in updatePoints function:", error);
     }
   };
+
+  // for toast the errors
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const success = params.get("success");
+    const error = params.get("error");
+
+    if (success) {
+      toast.success("Twitter linked successfully! Points updated.");
+    }
+
+    if (error) {
+      switch (error) {
+        case "unauthorized":
+          toast.error("You must be logged in.");
+          break;
+        case "invalid_callback":
+          toast.error("Invalid OAuth callback request.");
+          break;
+        case "no_screen_name":
+          toast.error("Failed to retrieve Twitter username.");
+          break;
+        case "no_world_id":
+          toast.error("Session error: World ID not found.");
+          break;
+        case "fetch_error":
+          toast.error("Error fetching user data.");
+          break;
+        case "check_error":
+          toast.error("Error checking existing Twitter account.");
+          break;
+        case "update_error":
+          toast.error("Error updating user data.");
+          break;
+        case "traffic_high":
+          toast.warn("Traffic too high. Please try again later.");
+          break;
+        case "callback_error":
+        default:
+          toast.error("An error occurred. Please try again.");
+      }
+    }
+  }, []);
 
   return (
     <div className="flex flex-col justify-items-center w-full text-[#07494E] gap-[8vw]">
