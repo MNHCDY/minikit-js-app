@@ -88,8 +88,11 @@ export async function GET(req: NextRequest) {
     }
 
     if (existingUser && existingUser.world_id !== world_id) {
-      console.warn(
-        `Twitter ID ${screen_name} is already linked to another user. Skipping update.`
+      return NextResponse.json(
+        {
+          error: `Twitter ID ${screen_name} is already linked to another user. Please try different  Twitter ID`,
+        },
+        { status: 400 }
       );
     } else {
       // Calculate new points
@@ -115,9 +118,11 @@ export async function GET(req: NextRequest) {
       await loggedClient.v1.createFriendship({ user_id: targetAccountId });
       console.log(`User successfully followed account ${targetAccountId}`);
     } catch (followError) {
-      // Handle follow error gracefully
-      console.warn(
-        `Failed to follow account ${targetAccountId}: ${String(followError)}`
+      return NextResponse.json(
+        {
+          error: "Failed to follow account. Please try again after some time.",
+        },
+        { status: 400 }
       );
     }
 

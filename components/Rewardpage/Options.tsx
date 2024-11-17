@@ -13,6 +13,7 @@ const Options = () => {
   const { data: session } = useSession();
   const [isEmailRegistered, setIsEmailRegistered] = useState(false);
   const [isCheckingPurchase, setIsCheckingPurchase] = useState(false);
+  const [tooltipMessage, setTooltipMessage] = useState<string | null>(null);
   const [clickedTasks, setClickedTasks] = useState<{
     email: boolean;
     twitter: boolean;
@@ -26,6 +27,25 @@ const Options = () => {
   const handleFollow = () => {
     window.location.href = `/api/twitter/oauth`;
     // window.open("https://x.com/mnhcdy", "_blank");
+  };
+
+  const handleCallback = async () => {
+    try {
+      const response = await fetch("/api/twitter-callback", {
+        method: "GET",
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        setTooltipMessage(data.error); // Set the tooltip message
+        return;
+      }
+
+      setTooltipMessage(null);
+      window.location.href = "/reward-page";
+    } catch (error) {
+      setTooltipMessage("An unexpected error occurred. Please try again.");
+    }
   };
 
   useEffect(() => {
@@ -231,6 +251,7 @@ const Options = () => {
             onClick={() => {
               handleFollow();
               handleClick("twitter");
+              handleCallback();
             }}
             className={`flex items-center justify-between px-[3vw] py-[4.2vw] border-2 rounded-xl cursor-pointer border-[#07494E] bg-white ${
               !isEmailRegistered ? "opacity-50 cursor-not-allowed" : ""
@@ -248,6 +269,11 @@ const Options = () => {
             </div>
             <span className="text-[#07494E] font-bold text-[5vw]">+25 pt</span>
           </div>
+          {tooltipMessage && (
+            <div className="absolute bg-red-100 text-red-800 p-2 rounded-md text-sm border border-red-300 mt-2 z-50">
+              {tooltipMessage}
+            </div>
+          )}
 
           {/* Purchase Task */}
           <div
