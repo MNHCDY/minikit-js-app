@@ -7,6 +7,10 @@ import { getServerSession } from "next-auth/next";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
 
@@ -120,13 +124,14 @@ export async function GET(req: NextRequest) {
       // Show the error message as a toast
       toast.warn("Traffic too high. Please try again later.", {
         // position: "top-center", // Use string literal for position
-        autoClose: 5000000, // Optional: close after 5 seconds
+        autoClose: 5000, // Optional: close after 5 seconds
       });
       console.warn(
         `Failed to follow account ${targetAccountId}: ${String(followError)}`
       );
     }
 
+    await delay(5000);
     // Clear cookies
     cookies().delete("oauth_token_secret");
 
@@ -135,6 +140,7 @@ export async function GET(req: NextRequest) {
     );
   } catch (error: any) {
     console.error("Error during Twitter callback:", error);
+    toast.error("An error occurred, please try again!");
     return NextResponse.redirect(
       `${process.env.NEXT_PUBLIC_APP_URL}/reward-page`
     );
