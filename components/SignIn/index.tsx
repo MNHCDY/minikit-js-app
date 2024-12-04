@@ -136,7 +136,7 @@ export const SignIn = () => {
               </div>
               <div className="uppercase flex flex-col items-center justify-center w-full gap-[5vw] ">
                 <button
-                  className="bg-[#07494E] text-white py-[3vw] w-[88vw] rounded-lg text-[5vw] font-bold uppercase"
+                  className="bg-[#07494E] text-white py-[3vw] w-[48vw] rounded-lg text-[5vw] font-bold uppercase"
                   onClick={() => signIn()}
                 >
                   Sign in
