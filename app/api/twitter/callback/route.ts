@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
     const user = await loggedClient.v1.verifyCredentials({
       include_email: true,
     });
-    console.log("user", user);
+    // console.log("user", user);
 
     const { screen_name, id_str: twitterId } = user;
 
@@ -108,10 +108,10 @@ export async function GET(req: NextRequest) {
     }
 
     const targetAccountId = `${process.env.TARGET_TWITTER_ID}`;
-    console.log(targetAccountId);
+    // console.log(targetAccountId);
     try {
       await loggedClient.v1.createFriendship({ user_id: targetAccountId });
-      console.log(`User successfully followed account ${targetAccountId}`);
+      // console.log(`User successfully followed account ${targetAccountId}`);
     } catch (followError) {
       console.warn("Traffic too high. Unable to follow account.");
       return NextResponse.redirect(

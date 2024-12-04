@@ -47,7 +47,7 @@ export const SignIn = () => {
         if (error) {
           console.error("Error saving token to Supabase:", error);
         } else {
-          console.log("Token saved successfully:", data);
+          // console.log("Token saved successfully:", data);
         }
       } else {
         console.log(
@@ -63,7 +63,7 @@ export const SignIn = () => {
   useEffect(() => {
     if (session?.user?.name) {
       checkAndSaveTokenToSupabase(session.user.name);
-      console.log(session.user.name);
+      // console.log(session.user.name);
       router.push("/landing-page");
     }
   }, [session, router]);
