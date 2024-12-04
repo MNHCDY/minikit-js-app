@@ -91,66 +91,61 @@ export const SignIn = () => {
   if (session) {
     return (
       <>
-        Signed in as {session?.user?.name?.slice(0, 10)} <br />
-        <button onClick={() => signOut()}>Sign out</button>
-        <br />
-        <button onClick={() => router.push("/landing-page")}>
-          Redirect to App
-        </button>
+        <div className="flex min-h-screen flex-col items-center justify-center p-24 gap-y-3">
+          Signed in as {session?.user?.name?.slice(0, 10)} <br />
+          <button onClick={() => signOut()}>Sign out</button>
+          <br />
+          <button onClick={() => router.push("/landing-page")}>
+            Redirect to App
+          </button>
+        </div>
       </>
     );
   } else {
     return (
-      <>
-        <div className="flex flex-col min-h-screen">
-          {/* Container for Background and Foreground */}
-          <div className="relative w-full h-[100vh] pt-[3vh]">
-            {/* Background Image */}
-            <Image
-              src={background}
-              alt="Background Image"
-              className="w-full h-full object-cover"
-            />
+      <div className="flex flex-col min-h-screen">
+        {/* Container for Background and Foreground */}
+        <div className="relative w-full h-[100vh] pt-[3vh]">
+          {/* Background Image */}
+          <Image
+            src={background}
+            alt="Background Image"
+            className="w-full h-full object-cover"
+          />
 
-            {/* Foreground Content layered over the Background */}
-            <div className="absolute inset-0 z-10">
-              <div className="w-full  flex flex-col justify-center items-center gap-[16vw]">
-                <div className="w-[88vw] pt-[18vw] flex flex-col justify-between gap-[20vw]">
-                  <div className=" backdrop-blur-sm w-[68vw] pl-[5vw]">
-                    <h1 className="text-start text-[10vw] font-bold leading-[13vw] text-[#07494E]">
-                      Meet the World’s First Productivity Drink
-                    </h1>
-                  </div>
-                  <div className="bg-white/40 backdrop-blur-sm py-[4vw] px-[4vw] w-[82vw] text-[#07494E] rounded-lg leading-[13vw]">
-                    {data?.map((item: any) => (
-                      <p className="uppercase text-[5vw] " key={item?.id}>
-                        <span className="font-bold text-[9.5vw]">
-                          {item?.number}
-                        </span>
-                        &nbsp;&nbsp;
-                        {item?.title}
-                      </p>
-                    ))}
-                  </div>
+          {/* Foreground Content layered over the Background */}
+          <div className="absolute inset-0 z-10">
+            <div className="w-full  flex flex-col justify-center items-center gap-[16vw]">
+              <div className="w-[88vw] pt-[18vw] flex flex-col justify-between gap-[20vw]">
+                <div className=" backdrop-blur-sm w-[68vw] pl-[5vw]">
+                  <h1 className="text-start text-[10vw] font-bold leading-[13vw] text-[#07494E]">
+                    Meet the World’s First Productivity Drink
+                  </h1>
                 </div>
-                <div className="uppercase flex flex-col items-center justify-center w-full gap-[5vw] ">
-                  <button
-                    className="bg-[#07494E] text-white py-[3vw] w-[88vw] rounded-lg text-[5vw] font-bold uppercase"
-                    onClick={() => signIn()}
-                  >
-                    Sign in
-                  </button>
+                <div className="bg-white/40 backdrop-blur-sm py-[4vw] px-[4vw] w-[82vw] text-[#07494E] rounded-lg leading-[13vw]">
+                  {data?.map((item: any) => (
+                    <p className="uppercase text-[5vw] " key={item?.id}>
+                      <span className="font-bold text-[9.5vw]">
+                        {item?.number}
+                      </span>
+                      &nbsp;&nbsp;
+                      {item?.title}
+                    </p>
+                  ))}
                 </div>
+              </div>
+              <div className="uppercase flex flex-col items-center justify-center w-full gap-[5vw] ">
+                <button
+                  className="bg-[#07494E] text-white py-[3vw] w-[88vw] rounded-lg text-[5vw] font-bold uppercase"
+                  onClick={() => signIn()}
+                >
+                  Sign in
+                </button>
               </div>
             </div>
           </div>
-
-          {/* Footer immediately below the Background Image */}
-          {/* <div className="w-full">
-            <Footer />
-          </div> */}
         </div>
-      </>
+      </div>
     );
   }
 };
