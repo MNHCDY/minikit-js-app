@@ -39,7 +39,7 @@ const ForeGround = () => {
           ))}
         </div>
       </div>
-      <div className="uppercase flex flex-col items-center justify-center w-full gap-[5vw] ">
+      {/* <div className="uppercase flex flex-col items-center justify-center w-full gap-[5vw] ">
         <button
           className="bg-[#07494E] text-white py-[3vw] w-[88vw] rounded-lg text-[5vw] font-bold uppercase"
           onClick={goToAnotherPage}
@@ -49,7 +49,7 @@ const ForeGround = () => {
         <button className="bg-white text-[#07494E] border-[#07494E] border-2 py-[3vw] w-[88vw] rounded-lg text-[5vw] font-bold uppercase">
           purchase flojo
         </button>
-      </div>
+      </div> */}
     </div>
   );
 };
