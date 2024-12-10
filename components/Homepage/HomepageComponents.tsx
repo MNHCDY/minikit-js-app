@@ -23,7 +23,7 @@ const HomepageComponents = () => {
       </div>
 
       {/* Footer immediately below the Background Image */}
-      <div className="w-full fixed bottom-0">
+      <div className="w-full fixed bottom-0 left-0 z-20 bg-white">
         <Footer />
       </div>
     </div>

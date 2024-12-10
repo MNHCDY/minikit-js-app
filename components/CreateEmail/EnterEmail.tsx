@@ -22,7 +22,7 @@ const EnterEmail = () => {
   const router = useRouter();
 
   const goToAnotherPage = () => {
-    router.push("/reward-page");
+    router.push("/landing-page");
   };
 
   const { data: session } = useSession();
