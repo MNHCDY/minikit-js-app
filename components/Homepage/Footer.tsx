@@ -1,7 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { FaArrowLeft } from "react-icons/fa6";
 import supabase from "../Supabase/supabaseClient";
 import { useSession } from "next-auth/react";
 import { toast } from "react-toastify";
@@ -103,51 +102,51 @@ const Footer = () => {
       console.error("Error updating task completion in Supabase:", error);
     }
   };
-  const handlePurchaseClick = () => {
-    window.open(
-      "https://drinkflojo.com/checkouts/cn/Z2NwLXVzLXdlc3QxOjAxSkNGQlRaUTlYNUtUM1haRlBZMENKQUY3?discount=",
-      "_blank"
-    );
+  // const handlePurchaseClick = () => {
+  //   window.open(
+  //     "https://drinkflojo.com/checkouts/cn/Z2NwLXVzLXdlc3QxOjAxSkNGQlRaUTlYNUtUM1haRlBZMENKQUY3?discount=",
+  //     "_blank"
+  //   );
 
-    pollForPurchaseSuccess();
-  };
+  //   pollForPurchaseSuccess();
+  // };
 
-  const pollForPurchaseSuccess = async () => {
-    const userId = session?.user?.name;
+  // const pollForPurchaseSuccess = async () => {
+  //   const userId = session?.user?.name;
 
-    setIsCheckingPurchase(true); // Set loading state
+  //   setIsCheckingPurchase(true); // Set loading state
 
-    const maxRetries = 20;
-    let retries = 0;
-    const interval = setInterval(async () => {
-      retries++;
+  //   const maxRetries = 20;
+  //   let retries = 0;
+  //   const interval = setInterval(async () => {
+  //     retries++;
 
-      const { data, error } = await supabase
-        .from("users")
-        .select("purchase_completed")
-        .eq("world_id", userId)
-        .single();
+  //     const { data, error } = await supabase
+  //       .from("users")
+  //       .select("purchase_completed")
+  //       .eq("world_id", userId)
+  //       .single();
 
-      if (error) {
-        console.error("Error checking purchase status:", error);
-        clearInterval(interval);
-        setIsCheckingPurchase(false);
-        return;
-      }
+  //     if (error) {
+  //       console.error("Error checking purchase status:", error);
+  //       clearInterval(interval);
+  //       setIsCheckingPurchase(false);
+  //       return;
+  //     }
 
-      if (data?.purchase_completed) {
-        clearInterval(interval);
-        await updatePoints(40);
-        setClickedTasks((prev) => ({ ...prev, purchase: true }));
-        console.log("Purchase detected and points updated.");
-        setIsCheckingPurchase(false); // Reset loading state
-      } else if (retries >= maxRetries) {
-        clearInterval(interval);
-        console.log("Purchase not detected within the timeout period.");
-        setIsCheckingPurchase(false); // Reset loading state
-      }
-    }, 5000);
-  };
+  //     if (data?.purchase_completed) {
+  //       clearInterval(interval);
+  //       await updatePoints(40);
+  //       setClickedTasks((prev) => ({ ...prev, purchase: true }));
+  //       console.log("Purchase detected and points updated.");
+  //       setIsCheckingPurchase(false); // Reset loading state
+  //     } else if (retries >= maxRetries) {
+  //       clearInterval(interval);
+  //       console.log("Purchase not detected within the timeout period.");
+  //       setIsCheckingPurchase(false); // Reset loading state
+  //     }
+  //   }, 5000);
+  // };
 
   const updatePoints = async (points: number) => {
     const userId = session?.user?.name;
@@ -279,8 +278,9 @@ const Footer = () => {
           {/* Purchase Task */}
           <div
             onClick={() => {
-              handleClick("purchase");
-              handlePurchaseClick();
+              // handleClick("purchase");
+              // handlePurchaseClick();
+              router.push("/purchase-flojo");
             }}
             className={`flex flex-col items-center justify-between  border-2 rounded-xl cursor-pointer border-[#07494E]  ${
               !isEmailRegistered ? "opacity-50 cursor-not-allowed" : ""

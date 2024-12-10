@@ -1,10 +1,9 @@
 import Image from "next/image";
 import React from "react";
 import background from "@/public/homepage/background.webp";
-import ForeGround from "./ForeGround";
-import Footer from "./Footer";
+import ForegroundPurchaseFlojo from "./ForegroundPurchaseFlojo";
 
-const HomepageComponents = () => {
+const PurchaseFlojoComponents = () => {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Container for Background and Foreground */}
@@ -15,19 +14,13 @@ const HomepageComponents = () => {
           alt="Background Image"
           className="w-full h-full object-cover"
         />
-
         {/* Foreground Content layered over the Background */}
-        <div className="absolute inset-0 z-10">
-          <ForeGround />
+        <div className="absolute inset-0 z-10 w-full">
+          <ForegroundPurchaseFlojo />
         </div>
-      </div>
-
-      {/* Footer immediately below the Background Image */}
-      <div className="w-full fixed bottom-0 left-0 z-20 bg-white">
-        <Footer />
       </div>
     </div>
   );
 };
 
-export default HomepageComponents;
+export default PurchaseFlojoComponents;
