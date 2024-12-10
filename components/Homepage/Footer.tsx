@@ -1,7 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { FaArrowLeft } from "react-icons/fa6";
 import supabase from "../Supabase/supabaseClient";
 import { useSession } from "next-auth/react";
 import { toast } from "react-toastify";
