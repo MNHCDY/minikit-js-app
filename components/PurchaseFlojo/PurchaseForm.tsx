@@ -1,5 +1,8 @@
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
+import { useState } from "react";
+import { WorldIDWidget } from "@worldcoin/id";
+import { handlePay } from "../Pay";
 
 const PurchaseForm = () => {
   // Validation Schema
@@ -25,6 +28,17 @@ const PurchaseForm = () => {
   // Submit Handler
   const handleSubmit = (values: any) => {
     alert(JSON.stringify(values, null, 2));
+  };
+
+  const [verified, setVerified] = useState(false);
+
+  const handleVerification = async (verificationResponse: any) => {
+    // Backend verification (if required by Worldcoin API)
+    if (verificationResponse.success) {
+      setVerified(true);
+    } else {
+      alert("Verification failed. Try again.");
+    }
   };
 
   return (
@@ -132,12 +146,25 @@ const PurchaseForm = () => {
             </div>
 
             {/* Submit Button */}
-            <button
-              type="submit"
-              className="w-full bg-[#07494E] text-white py-[4vw] px-[2vw] mt-[12vw] rounded-lg hover:bg-[#07494ebd] transition"
-            >
-              PAY WITH 2.0 WLD
-            </button>
+            {!verified ? (
+              <WorldIDWidget
+                actionId="get_your_action_id" // Replace with your Worldcoin Action ID
+                signal="purchase_flojo"
+                enableTelemetry
+                onSuccess={handleVerification}
+                onError={(error: any) =>
+                  console.error("Verification error:", error)
+                }
+              />
+            ) : (
+              <button
+                onClick={handlePay}
+                type="submit"
+                className="w-full bg-[#07494E] text-white py-[4vw] px-[2vw] mt-[12vw] rounded-lg hover:bg-[#07494ebd] transition"
+              >
+                PAY WITH 2.0 WLD
+              </button>
+            )}
           </Form>
         </Formik>
       </div>

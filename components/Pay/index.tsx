@@ -41,7 +41,7 @@ const sendPayment = async () => {
   }
 };
 
-const handlePay = async () => {
+export const handlePay = async () => {
   if (!MiniKit.isInstalled()) {
     console.error("MiniKit is not installed");
     return;
