@@ -1,7 +1,13 @@
+"use client";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
+import { PayBlock } from "../Pay";
+import { useState } from "react";
+
+const axios = require("axios");
 
 const PurchaseForm = () => {
+  const [error, setError] = useState<string | null>(null);
   // Validation Schema
   const validationSchema = Yup.object({
     firstName: Yup.string().required("First name is required"),
@@ -22,9 +28,80 @@ const PurchaseForm = () => {
     postalCode: "",
   };
 
+  const SHOPIFY_STORE_DOMAIN = process.env.SHOPIFY_STORE_DOMAIN;
+  const STOREFRONT_ACCESS_TOKEN = process.env.STOREFRONT_ACCESS_TOKEN;
+
+  const variantId = "49823391547714"; // Your numeric variant ID
+  const globalVariantId = Buffer.from(
+    `gid://shopify/ProductVariant/${variantId}`
+  ).toString("base64");
+  const quantity = 1; // Adjust the quantity as needed
+  const axiosInstance = axios.create({
+    baseURL: `https://${SHOPIFY_STORE_DOMAIN}/api/2023-07/graphql.json`,
+    headers: {
+      "Content-Type": "application/json",
+      "X-Shopify-Storefront-Access-Token": STOREFRONT_ACCESS_TOKEN,
+    },
+  });
+
+  async function createCheckout(values: any) {
+    try {
+      const response = await axiosInstance.post("", {
+        query: `
+          mutation {
+            checkoutCreate(input: {
+              lineItems: [{ variantId: "${globalVariantId}", quantity: ${quantity} }],
+                        customAttributes: [
+                            { key: "firstName", value: "${values.firstName}" },
+                            { key: "lastName", value: "${values.lastName}" },
+                            { key: "address1", value: "${values.address1}" },
+                            { key: "address2", value: "${values.address2}" },
+                            { key: "postalCode", value: "${values.postalCode}" }
+                        ]
+            }) {
+              checkout {
+                id
+                webUrl
+              }
+              checkoutUserErrors {
+                code
+                field
+                message
+              }
+            }
+          }
+        `,
+      });
+
+      if (response.data.errors) {
+        console.error("Error creating checkout:", response.data.errors);
+      } else {
+        console.log(
+          "Checkout created successfully:",
+          response.data.data.checkoutCreate.checkout
+        );
+      }
+    } catch (error) {
+      console.error(
+        "Error creating checkout:",
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+
   // Submit Handler
-  const handleSubmit = (values: any) => {
-    alert(JSON.stringify(values, null, 2));
+  const handleSubmit = async (values: any) => {
+    try {
+      const paymentSuccessful = await PayBlock.handlePay(values);
+      if (paymentSuccessful) {
+        await createCheckout(values);
+        setError(null); // Clear any previous errors
+      } else {
+        setError("Payment failed. Please try again.");
+      }
+    } catch (e) {
+      setError(e.message);
+    }
   };
 
   return (
