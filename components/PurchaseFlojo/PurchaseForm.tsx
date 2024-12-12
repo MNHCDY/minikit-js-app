@@ -2,12 +2,13 @@
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { PayBlock } from "../Pay";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const axios = require("axios");
 
 const PurchaseForm = () => {
   const [error, setError] = useState<string | null>(null);
+  const [priceInWLD, setPriceInWLD] = useState<number | null>(null);
   // Validation Schema
   const validationSchema = Yup.object({
     firstName: Yup.string().required("First name is required"),
@@ -28,8 +29,8 @@ const PurchaseForm = () => {
     postalCode: "",
   };
 
-  const SHOPIFY_STORE_DOMAIN = process.env.SHOPIFY_STORE_DOMAIN;
-  const STOREFRONT_ACCESS_TOKEN = process.env.STOREFRONT_ACCESS_TOKEN;
+  const SHOPIFY_STORE_DOMAIN = "26b521-91.myshopify.com";
+  const STOREFRONT_ACCESS_TOKEN = "3f7a1d4c22df631b66f3fb0dd65f8fdc";
 
   const variantId = "49823391547714"; // Your numeric variant ID
   const globalVariantId = Buffer.from(
@@ -43,6 +44,90 @@ const PurchaseForm = () => {
       "X-Shopify-Storefront-Access-Token": STOREFRONT_ACCESS_TOKEN,
     },
   });
+
+  const fetchWLDPrice = async () => {
+    const uniswapGraphQLUrl =
+      "https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v3";
+    const poolAddress = "0x610E319b3A3Ab56A0eD5562927D37c233774ba39"; // Replace with actual pool address
+
+    try {
+      const response = await axios.post(uniswapGraphQLUrl, {
+        query: `
+          query {
+            pool(id: "${poolAddress}") {
+              token0 {
+                symbol
+              }
+              token1 {
+                symbol
+              }
+              token0Price
+              token1Price
+            }
+          }
+        `,
+      });
+
+      const data = response.data.data;
+      if (data?.pool) {
+        const { token0Price, token1Price } = data.pool;
+        const priceInUSDC = parseFloat(token0Price); // Assuming token0 is WLD and token1 is USDC
+        console.log(`WLD Price in USDC: ${priceInUSDC}`);
+        return priceInUSDC;
+      } else {
+        console.error("Pool not found or data missing.");
+      }
+    } catch (error) {
+      console.error("Error fetching WLD price from Uniswap:", error.message);
+    }
+  };
+
+  const getVariantPrice = async () => {
+    try {
+      const response = await axiosInstance.post("", {
+        query: `
+          query GetVariantPrice($id: ID!) {
+            node(id: $id) {
+              ... on ProductVariant {
+                priceV2 {
+                  amount
+                  currencyCode
+                }
+              }
+            }
+          }
+        `,
+        variables: { id: globalVariantId },
+      });
+
+      const data = response.data.data;
+      if (data?.node?.priceV2) {
+        const { amount, currencyCode } = data.node.priceV2;
+        console.log(amount);
+        const priceInSGD = parseFloat(amount);
+
+        // Example Conversion: Assuming 1 SGD = 0.25 WLD
+        const conversionRate = 0.241151;
+        const convertedPrice = priceInSGD * conversionRate;
+
+        setPriceInWLD(convertedPrice);
+      } else {
+        console.error("Variant price not found");
+        setPriceInWLD(null);
+      }
+    } catch (error) {
+      console.error(
+        "Error fetching variant price:",
+        error.response ? error.response.data : error.message
+      );
+      setPriceInWLD(null);
+    }
+  };
+
+  useEffect(() => {
+    getVariantPrice();
+    fetchWLDPrice();
+  }, []);
 
   async function createCheckout(values: any) {
     try {
@@ -89,10 +174,68 @@ const PurchaseForm = () => {
     }
   }
 
+  //fetching the real time price of product
+
+  // const getVariantPrice = async (variantId: any) => {
+  //   try {
+  //     const response = await axiosInstance.post("", {
+  //       query: `
+  //         query GetVariantPrice($id: ID!) {
+  //           node(id: $id) {
+  //             ... on ProductVariant {
+  //               id
+  //               priceV2 {
+  //                 amount
+  //                 currencyCode
+  //               }
+  //             }
+  //           }
+  //         }
+  //       `,
+  //       variables: { id: variantId },
+  //     });
+
+  //     const data = response.data.data;
+  //     if (data?.node?.priceV2) {
+  //       const { amount, currencyCode } = data.node.priceV2;
+  //       console.log(`Price: ${amount} ${currencyCode}`);
+  //       return { amount, currencyCode };
+  //     } else {
+  //       console.error("Variant price not found");
+  //       return null;
+  //     }
+  //   } catch (error) {
+  //     console.error(
+  //       "Error fetching variant price:",
+  //       error.response ? error.response.data : error.message
+  //     );
+  //     return null;
+  //   }
+  // };
+
+  // const fetchPrice = async () => {
+  //   const variantPrice = await getVariantPrice(globalVariantId);
+  //   if (variantPrice) {
+  //     console.log(
+  //       `Variant Price: ${variantPrice.amount} ${variantPrice.currencyCode}`
+  //     );
+  //   }
+  // };
+
+  // useEffect(() => {
+  //   fetchPrice();
+  // }, []);
+
   // Submit Handler
   const handleSubmit = async (values: any) => {
+    if (!priceInWLD) {
+      setError("Unable to fetch product price. Please try again later.");
+      return;
+    }
+
     try {
-      const paymentSuccessful = await PayBlock.handlePay(values);
+      const paymentSuccessful = await PayBlock.handlePay(values, priceInWLD);
+
       if (paymentSuccessful) {
         await createCheckout(values);
         setError(null); // Clear any previous errors
