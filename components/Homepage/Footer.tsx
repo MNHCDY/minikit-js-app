@@ -3,8 +3,10 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import supabase from "../Supabase/supabaseClient";
 import { useSession } from "next-auth/react";
-import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { MdOutlineEmail } from "react-icons/md";
+import { FaXTwitter } from "react-icons/fa6";
+import { IoCartOutline } from "react-icons/io5";
 
 type TaskType = "email" | "worldID" | "twitter" | "purchase";
 
@@ -12,7 +14,7 @@ const Footer = () => {
   const router = useRouter();
   const { data: session } = useSession();
   const [isEmailRegistered, setIsEmailRegistered] = useState(false);
-  const [isCheckingPurchase, setIsCheckingPurchase] = useState(false);
+  // const [isCheckingPurchase, setIsCheckingPurchase] = useState(false);
   const [clickedTasks, setClickedTasks] = useState<{
     email: boolean;
     twitter: boolean;
@@ -22,11 +24,6 @@ const Footer = () => {
     twitter: false,
     purchase: false,
   });
-
-  const handleFollow = () => {
-    window.location.href = `/api/twitter/oauth`;
-    // window.open("https://x.com/mnhcdy", "_blank");
-  };
 
   useEffect(() => {
     const fetchTaskCompletionStatus = async () => {
@@ -95,6 +92,12 @@ const Footer = () => {
         case "email":
           router.push("/enter-email");
           break;
+        case "twitter":
+          router.push("/follow-x");
+          break;
+        case "purchase":
+          router.push("/purchase-flojo");
+          break;
         default:
           break;
       }
@@ -102,131 +105,6 @@ const Footer = () => {
       console.error("Error updating task completion in Supabase:", error);
     }
   };
-  // const handlePurchaseClick = () => {
-  //   window.open(
-  //     "https://drinkflojo.com/checkouts/cn/Z2NwLXVzLXdlc3QxOjAxSkNGQlRaUTlYNUtUM1haRlBZMENKQUY3?discount=",
-  //     "_blank"
-  //   );
-
-  //   pollForPurchaseSuccess();
-  // };
-
-  // const pollForPurchaseSuccess = async () => {
-  //   const userId = session?.user?.name;
-
-  //   setIsCheckingPurchase(true); // Set loading state
-
-  //   const maxRetries = 20;
-  //   let retries = 0;
-  //   const interval = setInterval(async () => {
-  //     retries++;
-
-  //     const { data, error } = await supabase
-  //       .from("users")
-  //       .select("purchase_completed")
-  //       .eq("world_id", userId)
-  //       .single();
-
-  //     if (error) {
-  //       console.error("Error checking purchase status:", error);
-  //       clearInterval(interval);
-  //       setIsCheckingPurchase(false);
-  //       return;
-  //     }
-
-  //     if (data?.purchase_completed) {
-  //       clearInterval(interval);
-  //       await updatePoints(40);
-  //       setClickedTasks((prev) => ({ ...prev, purchase: true }));
-  //       console.log("Purchase detected and points updated.");
-  //       setIsCheckingPurchase(false); // Reset loading state
-  //     } else if (retries >= maxRetries) {
-  //       clearInterval(interval);
-  //       console.log("Purchase not detected within the timeout period.");
-  //       setIsCheckingPurchase(false); // Reset loading state
-  //     }
-  //   }, 5000);
-  // };
-
-  const updatePoints = async (points: number) => {
-    const userId = session?.user?.name;
-
-    try {
-      // Step 1: Fetch the current points
-      const { data: userData, error: fetchError } = await supabase
-        .from("users")
-        .select("points")
-        .eq("world_id", userId)
-        .single();
-
-      if (fetchError) throw fetchError;
-
-      // Step 2: Calculate the new points total
-      const currentPoints = userData?.points || 0;
-      const newPoints = currentPoints + 40;
-
-      // Step 3: Update the points in the database
-      const { error: updateError } = await supabase
-        .from("users")
-        .update({ points: newPoints })
-        .eq("world_id", userId);
-
-      if (updateError) {
-        console.error(
-          "Error updating points in Supabase:",
-          updateError.message
-        );
-      } else {
-        console.log("Points updated successfully.");
-      }
-    } catch (error) {
-      console.error("Error in updatePoints function:", error);
-    }
-  };
-
-  // for toast the errors
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const success = params.get("success");
-    const error = params.get("error");
-
-    if (success) {
-      toast.success("Twitter linked successfully! Points updated.");
-    }
-
-    if (error) {
-      switch (error) {
-        case "unauthorized":
-          toast.error("You must be logged in.");
-          break;
-        case "invalid_callback":
-          toast.error("Invalid OAuth callback request.");
-          break;
-        case "no_screen_name":
-          toast.error("Failed to retrieve Twitter username.");
-          break;
-        case "no_world_id":
-          toast.error("Session error: World ID not found.");
-          break;
-        case "fetch_error":
-          toast.error("Error fetching user data.");
-          break;
-        case "check_error":
-          toast.error("Error checking existing Twitter account.");
-          break;
-        case "update_error":
-          toast.error("Error updating user data.");
-          break;
-        case "traffic_high":
-          toast.warn("Traffic too high. Please try again later.");
-          break;
-        case "callback_error":
-        default:
-          toast.error("An error occurred. Please try again.");
-      }
-    }
-  }, []);
 
   return (
     <div className="flex flex-col justify-items-center w-full text-white bg-[#07494E] ">
@@ -240,11 +118,13 @@ const Footer = () => {
             <div className="flex flex-col items-center space-y-2">
               <div
                 className={`w-[12vw] h-[12vw] rounded-full border-2 border-white flex items-center justify-center ${
-                  clickedTasks.email ? "bg-[#07494E]" : "bg-white"
+                  clickedTasks.email
+                    ? "bg-[#07494E] text-white"
+                    : "bg-white text-[#07494E]"
                 }`}
               >
-                <span className=" font-bold text-[3vw] text-[#07494E]">
-                  +1 pt
+                <span className=" font-bold text-[7vw]">
+                  <MdOutlineEmail />
                 </span>
               </div>
               <span className=" font-normal">Connect email</span>
@@ -254,7 +134,6 @@ const Footer = () => {
           {/* Twitter Task */}
           <div
             onClick={() => {
-              handleFollow();
               handleClick("twitter");
             }}
             className={`flex flex-col items-center justify-between  border-2 rounded-xl cursor-pointer border-[#07494E]  ${
@@ -264,11 +143,13 @@ const Footer = () => {
             <div className="flex flex-col items-center space-y-2">
               <div
                 className={`w-[12vw] h-[12vw] rounded-full border-2 border-white flex items-center justify-center ${
-                  clickedTasks.twitter ? "bg-[#07494E]" : "bg-white"
+                  clickedTasks.twitter
+                    ? "bg-[#07494E] text-white"
+                    : "bg-white text-[#07494E]"
                 }`}
               >
-                <span className=" font-bold text-[3vw] text-[#07494E]">
-                  +25 pt
+                <span className=" font-bold text-[8vw] ">
+                  <FaXTwitter />
                 </span>
               </div>
               <span className=" font-medium">Follow Twitter</span>
@@ -278,9 +159,7 @@ const Footer = () => {
           {/* Purchase Task */}
           <div
             onClick={() => {
-              // handleClick("purchase");
-              // handlePurchaseClick();
-              router.push("/purchase-flojo");
+              handleClick("purchase");
             }}
             className={`flex flex-col items-center justify-between  border-2 rounded-xl cursor-pointer border-[#07494E]  ${
               !isEmailRegistered ? "opacity-50 cursor-not-allowed" : ""
@@ -289,11 +168,13 @@ const Footer = () => {
             <div className="flex flex-col items-center space-y-2">
               <div
                 className={`w-[12vw] h-[12vw] rounded-full border-2 border-white flex items-center justify-center ${
-                  clickedTasks.purchase ? "bg-[#07494E]" : "bg-white"
+                  clickedTasks.purchase
+                    ? "bg-[#07494E] text-white"
+                    : "bg-white text-[#07494E]"
                 }`}
               >
-                <span className=" font-bold text-[3vw] text-[#07494E]">
-                  +40 pt
+                <span className=" font-bold text-[8vw] ">
+                  <IoCartOutline />
                 </span>
               </div>
               <span className=" font-medium">Purchase Flojo</span>

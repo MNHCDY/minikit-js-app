@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
 
   if (!session) {
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/reward-page?error=unauthorized`
+      `${process.env.NEXT_PUBLIC_APP_URL}/landing-page?error=unauthorized`
     );
   }
 
@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
 
   if (!oauth_token || !oauth_verifier || !oauth_token_secret) {
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/reward-page?error=invalid_callback`
+      `${process.env.NEXT_PUBLIC_APP_URL}/landing-page?error=invalid_callback`
     );
   }
 
@@ -48,7 +48,7 @@ export async function GET(req: NextRequest) {
 
     if (!screen_name) {
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL}/reward-page?error=no_screen_name`
+        `${process.env.NEXT_PUBLIC_APP_URL}/landing-page?error=no_screen_name`
       );
     }
 
@@ -56,7 +56,7 @@ export async function GET(req: NextRequest) {
 
     if (!world_id) {
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL}/reward-page?error=no_world_id`
+        `${process.env.NEXT_PUBLIC_APP_URL}/landing-page?error=no_world_id`
       );
     }
 
@@ -69,7 +69,7 @@ export async function GET(req: NextRequest) {
     if (fetchError) {
       console.error("Error fetching user data:", fetchError);
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL}/reward-page?error=fetch_error`
+        `${process.env.NEXT_PUBLIC_APP_URL}/landing-page?error=fetch_error`
       );
     }
 
@@ -82,7 +82,7 @@ export async function GET(req: NextRequest) {
     if (checkError && checkError.code !== "PGRST116") {
       console.error("Error checking existing twitter_id:", checkError);
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL}/reward-page?error=check_error`
+        `${process.env.NEXT_PUBLIC_APP_URL}/landing-page?error=check_error`
       );
     }
 
@@ -102,7 +102,7 @@ export async function GET(req: NextRequest) {
       if (updateError) {
         console.error("Error updating user data:", updateError);
         return NextResponse.redirect(
-          `${process.env.NEXT_PUBLIC_APP_URL}/reward-page?error=update_error`
+          `${process.env.NEXT_PUBLIC_APP_URL}/landing-page?error=update_error`
         );
       }
     }
@@ -115,7 +115,7 @@ export async function GET(req: NextRequest) {
     } catch (followError) {
       console.warn("Traffic too high. Unable to follow account.");
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL}/reward-page?error=traffic_high`
+        `${process.env.NEXT_PUBLIC_APP_URL}/landing-page?error=traffic_high`
       );
     }
 
@@ -123,12 +123,12 @@ export async function GET(req: NextRequest) {
     cookies().delete("oauth_token_secret");
 
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/reward-page?success=true`
+      `${process.env.NEXT_PUBLIC_APP_URL}/landing-page?success=true`
     );
   } catch (error: any) {
     console.error("Error during Twitter callback:", error);
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/reward-page?error=callback_error`
+      `${process.env.NEXT_PUBLIC_APP_URL}/landing-page?error=callback_error`
     );
   }
 }

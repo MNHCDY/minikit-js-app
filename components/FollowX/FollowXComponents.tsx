@@ -1,9 +1,9 @@
 import Image from "next/image";
 import React from "react";
 import background from "@/public/homepage/background.webp";
-import Options from "./Options";
+import EnterTwitter from "./EnterTwitter";
 
-const RewerdpageComponents = () => {
+const FollowXComponents = () => {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Container for Background and Foreground */}
@@ -16,14 +16,11 @@ const RewerdpageComponents = () => {
         />
         {/* Foreground Content layered over the Background */}
         <div className="absolute inset-0 z-10 w-full">
-          <Options />
+          <EnterTwitter />
         </div>
       </div>
-
-      {/* Footer immediately below the Background Image */}
-      {/* <div className="w-full"><Footer /></div> */}
     </div>
   );
 };
 
-export default RewerdpageComponents;
+export default FollowXComponents;

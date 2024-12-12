@@ -5,6 +5,7 @@ import MiniKitProvider from "@/components/minikit-provider";
 import dynamic from "next/dynamic";
 import NextAuthProvider from "@/components/next-auth-provider";
 import { ToastContainer } from "react-toastify";
+import Footer from "@/components/Homepage/Footer";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -30,7 +31,12 @@ export default function RootLayout({
       <NextAuthProvider>
         <ErudaProvider>
           <MiniKitProvider>
-            <body className={inter.className}>{children}</body>
+            <body className={inter.className}>
+              {children}
+              <div className="w-full fixed bottom-0 left-0 z-20 bg-white">
+                <Footer />
+              </div>
+            </body>
             <ToastContainer
               position="top-center"
               autoClose={5000}

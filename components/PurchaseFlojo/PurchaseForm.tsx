@@ -105,8 +105,8 @@ const PurchaseForm = () => {
   };
 
   return (
-    <div className="h-full flex items-center justify-center p-6">
-      <div className="w-full max-w-lg  py-[5vw] ">
+    <div className="h-full flex items-center justify-center pt-0 p-6">
+      <div className="w-full max-w-lg  py-[5vw] pt-[2vw] ">
         <Formik
           initialValues={initialValues}
           validationSchema={validationSchema}
@@ -211,7 +211,7 @@ const PurchaseForm = () => {
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full bg-[#07494E] text-white py-[4vw] px-[2vw] mt-[12vw] rounded-lg hover:bg-[#07494ebd] transition"
+              className="w-full bg-[#07494E] text-white py-[4vw] px-[2vw] mt-[8vw] rounded-lg hover:bg-[#07494ebd] transition"
             >
               PAY WITH 2.0 WLD
             </button>
