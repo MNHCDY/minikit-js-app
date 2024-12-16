@@ -3,138 +3,94 @@ import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { PayBlock } from "../Pay";
 import { useEffect, useState } from "react";
-// import { JsonRpcProvider } from "ethers";
-import { ChainId, Token, WETH9 } from "@uniswap/sdk-core";
-import { getConversionRate } from "../Pay/ConversionUtils";
-// import { Contract } from "ethers";
+import { Token, WETH9, ChainId } from "@uniswap/sdk-core";
+import { Pool, Route } from "@uniswap/v3-sdk";
+import { ethers, JsonRpcProvider } from "ethers";
 
-// // Uniswap V3 Factory ABI
-// const uniswapV3FactoryAbi = [
-//   "function getPool(address tokenA, address tokenB, uint24 fee) view returns (address)",
-// ];
+const provider = new JsonRpcProvider(
+  "https://mainnet.infura.io/v3/e44f049baec044b393d4c5c8a62fade5"
+);
 
-// // Uniswap V3 Pool ABI (to fetch state)
-// const uniswapV3PoolAbi = [
-//   "function slot0() view returns (uint160 sqrtPriceX96, int24 tick, uint16 observationIndex, uint16 observationCardinality, uint16 observationCardinalityNext, uint8 feeProtocol, bool unlocked)",
-//   "function liquidity() view returns (uint128)",
-// ];
+const USDC = new Token(
+  ChainId.MAINNET,
+  "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+  6
+);
+const DAI = new Token(
+  ChainId.MAINNET,
+  "0x163f8C2467924be0ae7B5347228CABF260318753",
+  18
+);
+const WETH = new Token(
+  ChainId.MAINNET,
+  "0x163f8C2467924be0ae7B5347228CABF260318753",
+  18
+); // Native WETH
 
-// // Provider setup
-// const provider = new JsonRpcProvider(
-//   "https://mainnet.infura.io/v3/e44f049baec044b393d4c5c8a62fade5"
-// );
+// Pool Addresses
+const POOL_USDC_WETH = "0x88e6A0c2dDD26FEEb64F039a2c41296FcB3f5640"; // WETH/USDC (0.3%)
+const POOL_WETH_DAI = "0x841820459769cd629B10a36FD12E603938cc2679"; // DAI/USDC (0.05%)
 
-// // Tokens
-// const WLD = new Token(
-//   ChainId.MAINNET,
-//   "0x163f8C2467924be0ae7B5347228CABF260318753",
-//   18
-// );
-// const WETH = new Token(
-//   ChainId.MAINNET,
-//   "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
-//   18
-// ); // Native WETH token on Mainnet
+// Uniswap Pool ABI
+const poolAbi = [
+  "function slot0() view returns (uint160 sqrtPriceX96, int24 tick, uint16 observationIndex, uint16 observationCardinality, uint16 observationCardinalityNext, uint8 feeProtocol, bool unlocked)",
+  "function liquidity() view returns (uint128)",
+];
 
-// // Uniswap V3 Factory Address (Mainnet)
-// const UNISWAP_V3_FACTORY_ADDRESS = "0x1F98431c8aD98523631AE4a59f267346ea31F984";
+async function fetchPoolState(poolAddress: string) {
+  const poolContract = new ethers.Contract(poolAddress, poolAbi, provider);
 
-// // Fee tier (e.g., 0.3% = 3000)
-// const FEE_TIER = 3000;
+  const [slot0, liquidity] = await Promise.all([
+    poolContract.slot0(),
+    poolContract.liquidity(),
+  ]);
 
-// // Function to fetch the pool address for the given token pair and fee tier
-// async function getV3PoolAddress(
-//   tokenA: Token,
-//   tokenB: Token,
-//   fee: number
-// ): Promise<string> {
-//   const factoryContract = new Contract(
-//     UNISWAP_V3_FACTORY_ADDRESS,
-//     uniswapV3FactoryAbi,
-//     provider
-//   );
+  return { slot0, liquidity };
+}
 
-//   const poolAddress = await factoryContract.getPool(
-//     tokenA.address,
-//     tokenB.address,
-//     fee
-//   );
+async function createPool(
+  tokenA: Token,
+  tokenB: Token,
+  fee: number,
+  poolAddress: string
+): Promise<Pool> {
+  const { slot0, liquidity } = await fetchPoolState(poolAddress);
+  const { sqrtPriceX96, tick } = slot0;
+  const tickInt = parseInt(tick);
+  console.log("tick", typeof tickInt, tickInt);
 
-//   if (
-//     !poolAddress ||
-//     poolAddress === "0x0000000000000000000000000000000000000000"
-//   ) {
-//     throw new Error(
-//       "Pool does not exist for the given token pair and fee tier."
-//     );
-//   }
-//   return poolAddress;
-// }
+  return new Pool(
+    tokenA,
+    tokenB,
+    fee,
+    sqrtPriceX96.toString(),
+    liquidity.toString(),
+    tickInt
+  );
+}
 
-// // Function to fetch the Uniswap V3 pool and calculate conversion rates
-// // Function to fetch the Uniswap V3 pool and calculate conversion rates
-// async function getConversionRate(): Promise<void> {
-//   try {
-//     const poolAddress = await getV3PoolAddress(WLD, WETH, FEE_TIER);
-//     console.log("V3 Pool Address:", poolAddress);
+async function getConversionRate() {
+  // Create pools
+  const poolUSDCWETH = await createPool(USDC, WETH, 3000, POOL_USDC_WETH);
+  const poolDAIUSDC = await createPool(WETH, DAI, 3000, POOL_WETH_DAI);
 
-//     const poolContract = new Contract(poolAddress, uniswapV3PoolAbi, provider);
+  // Create a multi-hop route: WETH -> USDC -> DAI
+  const route = new Route([poolUSDCWETH, poolDAIUSDC], USDC, DAI);
+  console.log("route", route);
 
-//     // Fetch pool state
-//     const [slot0, liquidity] = await Promise.all([
-//       poolContract.slot0(),
-//       poolContract.liquidity(),
-//     ]);
+  // Get the mid-price for the route
+  const midPrice = route.midPrice.toSignificant(6);
+  console.log(`1 WETH -> ${midPrice} DAI`);
 
-//     const { sqrtPriceX96 } = slot0;
+  return midPrice;
+}
 
-//     // Convert BigInt sqrtPriceX96 to a number for calculations
-//     const sqrtPrice = Number(sqrtPriceX96) / Math.pow(2, 96);
-//     const price = Math.pow(sqrtPrice, 2);
-
-//     // Output prices
-//     console.log(`Price of 1 WETH in terms of WLD: ${price}`);
-//     console.log(`Price of 1 WLD in terms of WETH: ${1 / price}`);
-//   } catch (error) {
-//     console.error("Error fetching conversion rate:", error.message);
-//     throw error;
-//   }
-// }
-
-// // Main function
-// async function main() {
-//   await getConversionRate();
-// }
-
-// main().catch(console.error);
+getConversionRate().catch(console.error);
 const axios = require("axios");
 
 const PurchaseForm = () => {
   const [error, setError] = useState<string | null>(null);
   const [priceInWLD, setPriceInWLD] = useState<number | null>(null);
-  const [conversionRateWLD_WETH, setConversionRateWLD_WETH] = useState<
-    string | null
-  >(null);
-  const [conversionRateWETH_USDC, setConversionRateWETH_USDC] = useState<
-    string | null
-  >(null);
-
-  // Create token instances (WLD and WETH)
-  const WLD = new Token(
-    ChainId.MAINNET,
-    "0x163f8C2467924be0ae7B5347228CABF260318753",
-    18
-  );
-  const WETH = new Token(
-    ChainId.MAINNET,
-    "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
-    18
-  );
-  const USDC = new Token(
-    ChainId.MAINNET,
-    "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-    6
-  );
   // Validation Schema
   const validationSchema = Yup.object({
     firstName: Yup.string().required("First name is required"),
@@ -252,36 +208,8 @@ const PurchaseForm = () => {
 
   useEffect(() => {
     getVariantPrice();
-    const fetchConversionRate = async () => {
-      try {
-        setError(null); // Reset any previous error
-        setConversionRateWLD_WETH("Loading...");
-
-        // Call the getConversionRate function with dynamic tokens (ETH and WLD)
-        const rate1 = await getConversionRate(WLD, WETH);
-
-        setConversionRateWLD_WETH(rate1); // Update state with conversion rate
-        setError(null); // Reset any previous error
-        setConversionRateWETH_USDC("Loading...");
-
-        // Call the getConversionRate function with dynamic tokens (ETH and WLD)
-        const rate2 = await getConversionRate(WETH, USDC);
-        setConversionRateWETH_USDC(rate2); // Update state with conversion rate
-      } catch (err) {
-        console.error(err); // Log the error
-        setError("Error fetching conversion rate.");
-        setConversionRateWLD_WETH(null); // Reset conversion rate in case of error
-        setError("Error fetching conversion rate.");
-        setConversionRateWETH_USDC(null); // Reset conversion rate in case of error
-      }
-    };
-
-    // Call the function to fetch the conversion rate when the component mounts
-    fetchConversionRate();
+    // fetchWLDPrice();
   }, []);
-
-  console.log("conversionRateWLD_WETH", conversionRateWLD_WETH);
-  console.log("conversionRateWETH_USDC", conversionRateWETH_USDC);
 
   async function createCheckout(values: any) {
     try {
