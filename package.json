@@ -11,11 +11,13 @@
   "dependencies": {
     "@shopify/shopify-api": "^11.6.1",
     "@supabase/supabase-js": "^2.46.1",
+    "@uniswap/sdk-core": "^6.1.1",
     "@worldcoin/id": "^0.9.2",
     "@worldcoin/minikit-js": "1.1.1",
     "axios": "^1.7.7",
     "cookies-next": "^5.0.2",
     "eruda": "^3.2.3",
+    "ethers": "^6.13.4",
     "formik": "^2.4.6",
     "iron-session": "^8.0.4",
     "next": "14.2.6",

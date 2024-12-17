@@ -112,11 +112,8 @@ const axios = require("axios");
 const PurchaseForm = () => {
   const [error, setError] = useState<string | null>(null);
   const [priceInWLD, setPriceInWLD] = useState<number | null>(null);
-  const [conversionRateWLD_WETH, setConversionRateWLD_WETH] = useState<
-    string | null
-  >(null);
-  const [conversionRateWETH_USDC, setConversionRateWETH_USDC] = useState<
-    string | null
+  const [conversionRateUSDC_WLD, setConversionRateUSDC_WLD] = useState<
+    number | string | null
   >(null);
 
   // Create token instances (WLD and WETH)
@@ -233,10 +230,20 @@ const PurchaseForm = () => {
         const priceInSGD = parseFloat(amount);
 
         // Example Conversion: Assuming 1 SGD = 0.25 WLD
-        const conversionRate = 0.241151;
-        const convertedPrice = priceInSGD * conversionRate;
 
-        setPriceInWLD(convertedPrice);
+        if (
+          conversionRateUSDC_WLD &&
+          typeof conversionRateUSDC_WLD === "number"
+        ) {
+          const convertSGD_USD = priceInSGD * 1.35;
+          const convertedPrice = convertSGD_USD * conversionRateUSDC_WLD;
+          setPriceInWLD(convertedPrice);
+        } else {
+          const conversionRate = 0.241151;
+          const convertedPrice = conversionRate * conversionRate;
+
+          setPriceInWLD(convertedPrice);
+        }
       } else {
         console.error("Variant price not found");
         setPriceInWLD(null);
@@ -255,24 +262,23 @@ const PurchaseForm = () => {
     const fetchConversionRate = async () => {
       try {
         setError(null); // Reset any previous error
-        setConversionRateWLD_WETH("Loading...");
-
         // Call the getConversionRate function with dynamic tokens (ETH and WLD)
         const rate1 = await getConversionRate(WLD, WETH);
-
-        setConversionRateWLD_WETH(rate1); // Update state with conversion rate
-        setError(null); // Reset any previous error
-        setConversionRateWETH_USDC("Loading...");
-
-        // Call the getConversionRate function with dynamic tokens (ETH and WLD)
         const rate2 = await getConversionRate(WETH, USDC);
-        setConversionRateWETH_USDC(rate2); // Update state with conversion rate
+        setConversionRateUSDC_WLD("Loading...");
+        // Call the getConversionRate function with dynamic tokens (ETH and WLD)
+        const actualPriceWETH_WLD = 1 / rate1;
+        console.log("for WLD/WETH", actualPriceWETH_WLD);
+
+        const pow = 10 ** -12;
+        const actualPriceWETH_USDC = rate2 * pow;
+        console.log("for WETH/USDC", actualPriceWETH_USDC);
+        const conversionRate = actualPriceWETH_WLD * actualPriceWETH_USDC;
+        setConversionRateUSDC_WLD(conversionRate); // Update state with conversion rate
       } catch (err) {
         console.error(err); // Log the error
         setError("Error fetching conversion rate.");
-        setConversionRateWLD_WETH(null); // Reset conversion rate in case of error
-        setError("Error fetching conversion rate.");
-        setConversionRateWETH_USDC(null); // Reset conversion rate in case of error
+        setConversionRateUSDC_WLD(null); // Reset conversion rate in case of error
       }
     };
 
@@ -280,8 +286,7 @@ const PurchaseForm = () => {
     fetchConversionRate();
   }, []);
 
-  console.log("conversionRateWLD_WETH", conversionRateWLD_WETH);
-  console.log("conversionRateWETH_USDC", conversionRateWETH_USDC);
+  console.log("conversionRate", conversionRateUSDC_WLD);
 
   async function createCheckout(values: any) {
     try {
@@ -510,7 +515,8 @@ const PurchaseForm = () => {
               type="submit"
               className="w-full bg-[#07494E] text-white py-[4vw] px-[2vw] mt-[8vw] rounded-lg hover:bg-[#07494ebd] transition"
             >
-              PAY WITH 2.0 WLD
+              PAY WITH {priceInWLD} WLD
+              {/* Number(priceInWLD.toFixed(3)) */}
             </button>
           </Form>
         </Formik>

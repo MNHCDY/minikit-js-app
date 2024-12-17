@@ -57,7 +57,7 @@ export async function getV3PoolAddress(
 export async function getConversionRate(
   tokenA: Token,
   tokenB: Token
-): Promise<string> {
+): Promise<number> {
   try {
     const poolAddress = await getV3PoolAddress(tokenA, tokenB, FEE_TIER);
     console.log("V3 Pool Address:", poolAddress);
@@ -77,11 +77,7 @@ export async function getConversionRate(
     const price = Math.pow(sqrtPrice, 2);
 
     // Return price as string for React component to display
-    return `Price of 1 ${tokenB.symbol} in terms of ${
-      tokenA.symbol
-    }: ${price}, Price of 1 ${tokenA.symbol} in terms of ${tokenB.symbol}: ${
-      1 / price
-    }`;
+    return price;
   } catch (error) {
     console.error("Error fetching conversion rate:", error.message);
     throw error;
