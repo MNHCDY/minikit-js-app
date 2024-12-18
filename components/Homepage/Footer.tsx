@@ -25,6 +25,8 @@ const Footer = () => {
     purchase: false,
   });
 
+  const [isModalOpen, setIsModalOpen] = useState(false); // State to manage modal visibility
+
   useEffect(() => {
     const fetchTaskCompletionStatus = async () => {
       try {
@@ -88,6 +90,11 @@ const Footer = () => {
         setIsEmailRegistered(true);
       }
 
+      if (task === "purchase") {
+        setIsModalOpen(true); // Open the modal
+        return;
+      }
+
       switch (task) {
         case "email":
           router.push("/enter-email");
@@ -95,14 +102,33 @@ const Footer = () => {
         case "twitter":
           router.push("/follow-x");
           break;
-        case "purchase":
-          router.push("/purchase-flojo");
-          break;
+        // case "purchase":
+        //   router.push("/purchase-flojo");
+        //   break;
         default:
           break;
       }
     } catch (error) {
       console.error("Error updating task completion in Supabase:", error);
+    }
+  };
+
+  const handleConfirmPurchase = async () => {
+    setIsModalOpen(false);
+
+    try {
+      const worldId = session?.user?.name;
+
+      const { error } = await supabase
+        .from("users")
+        .update({ purchase_completed: true })
+        .eq("world_id", worldId);
+
+      if (error) throw error;
+
+      router.push("/purchase-flojo");
+    } catch (error) {
+      console.error("Error updating purchase task:", error);
     }
   };
 
@@ -161,9 +187,10 @@ const Footer = () => {
             onClick={() => {
               handleClick("purchase");
             }}
-            className={`flex flex-col items-center justify-between  border-2 rounded-xl cursor-pointer border-[#07494E]  ${
+            className={`flex flex-col items-center justify-between  border-2 rounded-xl cursor-pointer border-[#07494E] ${
               !isEmailRegistered ? "opacity-50 cursor-not-allowed" : ""
-            }`}
+            }
+              `}
           >
             <div className="flex flex-col items-center space-y-2">
               <div
@@ -180,6 +207,35 @@ const Footer = () => {
               <span className=" font-medium">Purchase Flojo</span>
             </div>
           </div>
+
+          {/* Modal */}
+          {isModalOpen && (
+            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+              <div className="bg-white text-black p-6 rounded-lg shadow-lg mx-4">
+                <h2 className="text-lg font-bold mb-4">
+                  Are you from Singapore?
+                </h2>
+                <p className="text-sm mb-6">
+                  We currently do not ship outside of Singapore. Please follow
+                  our socials for the latest news.
+                </p>
+                <div className="flex justify-end space-x-4">
+                  <button
+                    onClick={() => setIsModalOpen(false)}
+                    className="px-4 py-2 bg-gray-300 rounded-md"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleConfirmPurchase}
+                    className="px-4 py-2 bg-[#07494E] text-white rounded-md"
+                  >
+                    Confirm
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

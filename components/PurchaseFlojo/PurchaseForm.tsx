@@ -41,10 +41,10 @@ const PurchaseForm = () => {
     firstName: Yup.string().required("First name is required"),
     lastName: Yup.string().required("Last name is required"),
     address1: Yup.string().required("Address line 1 is required"),
-    address2: Yup.string(),
+    address2: Yup.string().required("Address line 1 is required"),
     postalCode: Yup.string()
       .required("Postal code is required")
-      .matches(/^\d{5}(-\d{4})?$/, "Invalid postal code"),
+      .matches(/^\d{6}(-\d{6})?$/, "Invalid postal code"),
   });
 
   // Initial Form Values
@@ -336,7 +336,7 @@ const PurchaseForm = () => {
                 type="text"
                 id="address1"
                 name="address1"
-                placeholder="Enter your address"
+                placeholder="Enter your address line 1"
                 className="text-[4vw] w-full mt-2 p-[4vw] border-2 border-[#07494E] rounded-lg focus:ring-4 focus:ring-[#07494E] text-[#07494E]"
               />
               <ErrorMessage
@@ -356,7 +356,7 @@ const PurchaseForm = () => {
                 type="text"
                 id="address2"
                 name="address2"
-                placeholder="Enter your address (optional)"
+                placeholder="Enter your address line 2"
                 className="text-[4vw] w-full mt-2 p-[4vw] border-2 border-[#07494E] rounded-lg focus:ring-4 focus:ring-[#07494E] text-[#07494E]"
               />
             </div>

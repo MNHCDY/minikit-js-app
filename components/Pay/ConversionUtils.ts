@@ -15,7 +15,7 @@ const uniswapV3PoolAbi = [
 
 // Provider setup
 const provider = new JsonRpcProvider(
-  "https://mainnet.infura.io/v3/e44f049baec044b393d4c5c8a62fade5"
+  process.env.NEXT_PUBLIC_CONVERSION_OF_COIN_URL
 );
 
 // Uniswap V3 Factory Address (Mainnet)
