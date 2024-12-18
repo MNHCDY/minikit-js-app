@@ -3,116 +3,20 @@ import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { PayBlock } from "../Pay";
 import { useEffect, useState } from "react";
-// import { JsonRpcProvider } from "ethers";
 import { ChainId, Token, WETH9 } from "@uniswap/sdk-core";
 import { getConversionRate } from "../Pay/ConversionUtils";
-// import { Contract } from "ethers";
-
-// // Uniswap V3 Factory ABI
-// const uniswapV3FactoryAbi = [
-//   "function getPool(address tokenA, address tokenB, uint24 fee) view returns (address)",
-// ];
-
-// // Uniswap V3 Pool ABI (to fetch state)
-// const uniswapV3PoolAbi = [
-//   "function slot0() view returns (uint160 sqrtPriceX96, int24 tick, uint16 observationIndex, uint16 observationCardinality, uint16 observationCardinalityNext, uint8 feeProtocol, bool unlocked)",
-//   "function liquidity() view returns (uint128)",
-// ];
-
-// // Provider setup
-// const provider = new JsonRpcProvider(
-//   "https://mainnet.infura.io/v3/e44f049baec044b393d4c5c8a62fade5"
-// );
-
-// // Tokens
-// const WLD = new Token(
-//   ChainId.MAINNET,
-//   "0x163f8C2467924be0ae7B5347228CABF260318753",
-//   18
-// );
-// const WETH = new Token(
-//   ChainId.MAINNET,
-//   "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
-//   18
-// ); // Native WETH token on Mainnet
-
-// // Uniswap V3 Factory Address (Mainnet)
-// const UNISWAP_V3_FACTORY_ADDRESS = "0x1F98431c8aD98523631AE4a59f267346ea31F984";
-
-// // Fee tier (e.g., 0.3% = 3000)
-// const FEE_TIER = 3000;
-
-// // Function to fetch the pool address for the given token pair and fee tier
-// async function getV3PoolAddress(
-//   tokenA: Token,
-//   tokenB: Token,
-//   fee: number
-// ): Promise<string> {
-//   const factoryContract = new Contract(
-//     UNISWAP_V3_FACTORY_ADDRESS,
-//     uniswapV3FactoryAbi,
-//     provider
-//   );
-
-//   const poolAddress = await factoryContract.getPool(
-//     tokenA.address,
-//     tokenB.address,
-//     fee
-//   );
-
-//   if (
-//     !poolAddress ||
-//     poolAddress === "0x0000000000000000000000000000000000000000"
-//   ) {
-//     throw new Error(
-//       "Pool does not exist for the given token pair and fee tier."
-//     );
-//   }
-//   return poolAddress;
-// }
-
-// // Function to fetch the Uniswap V3 pool and calculate conversion rates
-// // Function to fetch the Uniswap V3 pool and calculate conversion rates
-// async function getConversionRate(): Promise<void> {
-//   try {
-//     const poolAddress = await getV3PoolAddress(WLD, WETH, FEE_TIER);
-//     console.log("V3 Pool Address:", poolAddress);
-
-//     const poolContract = new Contract(poolAddress, uniswapV3PoolAbi, provider);
-
-//     // Fetch pool state
-//     const [slot0, liquidity] = await Promise.all([
-//       poolContract.slot0(),
-//       poolContract.liquidity(),
-//     ]);
-
-//     const { sqrtPriceX96 } = slot0;
-
-//     // Convert BigInt sqrtPriceX96 to a number for calculations
-//     const sqrtPrice = Number(sqrtPriceX96) / Math.pow(2, 96);
-//     const price = Math.pow(sqrtPrice, 2);
-
-//     // Output prices
-//     console.log(`Price of 1 WETH in terms of WLD: ${price}`);
-//     console.log(`Price of 1 WLD in terms of WETH: ${1 / price}`);
-//   } catch (error) {
-//     console.error("Error fetching conversion rate:", error.message);
-//     throw error;
-//   }
-// }
-
-// // Main function
-// async function main() {
-//   await getConversionRate();
-// }
-
-// main().catch(console.error);
+import { loadGetInitialProps } from "next/dist/shared/lib/utils";
 const axios = require("axios");
 
 const PurchaseForm = () => {
   const [error, setError] = useState<string | null>(null);
   const [priceInWLD, setPriceInWLD] = useState<number | null>(null);
+  const [priceInUSD, setPriceInUSD] = useState<number | null>(null);
+  const [priceInSGD, setPriceInSGD] = useState<number | null>(null);
   const [conversionRateUSDC_WLD, setConversionRateUSDC_WLD] = useState<
+    number | string | null
+  >(null);
+  const [conversionRateSGD_USD, setConversionRateSGD_USD] = useState<
     number | string | null
   >(null);
 
@@ -168,43 +72,6 @@ const PurchaseForm = () => {
     },
   });
 
-  // const fetchWLDPrice = async () => {
-  //   const uniswapGraphQLUrl =
-  //     "https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v3";
-  //   const poolAddress = "0x610E319b3A3Ab56A0eD5562927D37c233774ba39"; // Replace with actual pool address
-
-  //   try {
-  //     const response = await axios.post(uniswapGraphQLUrl, {
-  //       query: `
-  //         query {
-  //           pool(id: "${poolAddress}") {
-  //             token0 {
-  //               symbol
-  //             }
-  //             token1 {
-  //               symbol
-  //             }
-  //             token0Price
-  //             token1Price
-  //           }
-  //         }
-  //       `,
-  //     });
-
-  //     const data = response.data.data;
-  //     if (data?.pool) {
-  //       const { token0Price, token1Price } = data.pool;
-  //       const priceInUSDC = parseFloat(token0Price); // Assuming token0 is WLD and token1 is USDC
-  //       console.log(`WLD Price in USDC: ${priceInUSDC}`);
-  //       return priceInUSDC;
-  //     } else {
-  //       console.error("Pool not found or data missing.");
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching WLD price from Uniswap:", error.message);
-  //   }
-  // };
-
   const getVariantPrice = async () => {
     try {
       const response = await axiosInstance.post("", {
@@ -226,39 +93,38 @@ const PurchaseForm = () => {
       const data = response.data.data;
       if (data?.node?.priceV2) {
         const { amount, currencyCode } = data.node.priceV2;
-        console.log(amount);
+        // console.log(amount);
         const priceInSGD = parseFloat(amount);
-
-        // Example Conversion: Assuming 1 SGD = 0.25 WLD
-
-        if (
-          conversionRateUSDC_WLD &&
-          typeof conversionRateUSDC_WLD === "number"
-        ) {
-          const convertSGD_USD = priceInSGD * 1.35;
-          const convertedPrice = convertSGD_USD * conversionRateUSDC_WLD;
-          setPriceInWLD(convertedPrice);
-        } else {
-          const conversionRate = 0.241151;
-          const convertedPrice = conversionRate * conversionRate;
-
-          setPriceInWLD(convertedPrice);
-        }
+        setPriceInSGD(priceInSGD);
       } else {
         console.error("Variant price not found");
-        setPriceInWLD(null);
+        setPriceInSGD(null);
       }
     } catch (error) {
       console.error(
         "Error fetching variant price:",
         error.response ? error.response.data : error.message
       );
-      setPriceInWLD(null);
+      setPriceInSGD(null);
     }
   };
 
   useEffect(() => {
     getVariantPrice();
+    const fetchConversionRateSGD_USD = async () => {
+      try {
+        setError(null);
+        const rate = await fetchSGDToUSDC();
+        // console.log("rate sgd to usd", rate);
+        setConversionRateSGD_USD("loading....");
+        setConversionRateSGD_USD(rate);
+      } catch (err) {
+        console.error(err);
+        setError("Error fetching conversion rate from sgd to usd");
+        setConversionRateSGD_USD(null);
+      }
+    };
+    fetchConversionRateSGD_USD();
     const fetchConversionRate = async () => {
       try {
         setError(null); // Reset any previous error
@@ -268,11 +134,11 @@ const PurchaseForm = () => {
         setConversionRateUSDC_WLD("Loading...");
         // Call the getConversionRate function with dynamic tokens (ETH and WLD)
         const actualPriceWETH_WLD = 1 / rate1;
-        console.log("for WLD/WETH", actualPriceWETH_WLD);
+        // console.log("for WLD/WETH", actualPriceWETH_WLD);
 
         const pow = 10 ** -12;
         const actualPriceWETH_USDC = rate2 * pow;
-        console.log("for WETH/USDC", actualPriceWETH_USDC);
+        // console.log("for WETH/USDC", actualPriceWETH_USDC);
         const conversionRate = actualPriceWETH_WLD * actualPriceWETH_USDC;
         setConversionRateUSDC_WLD(conversionRate); // Update state with conversion rate
       } catch (err) {
@@ -286,7 +152,8 @@ const PurchaseForm = () => {
     fetchConversionRate();
   }, []);
 
-  console.log("conversionRate", conversionRateUSDC_WLD);
+  console.log("conversionRate USDC to WLD", conversionRateUSDC_WLD);
+  console.log("conversionRate SGD to USD", conversionRateSGD_USD);
 
   async function createCheckout(values: any) {
     try {
@@ -333,58 +200,6 @@ const PurchaseForm = () => {
     }
   }
 
-  //fetching the real time price of product
-
-  // const getVariantPrice = async (variantId: any) => {
-  //   try {
-  //     const response = await axiosInstance.post("", {
-  //       query: `
-  //         query GetVariantPrice($id: ID!) {
-  //           node(id: $id) {
-  //             ... on ProductVariant {
-  //               id
-  //               priceV2 {
-  //                 amount
-  //                 currencyCode
-  //               }
-  //             }
-  //           }
-  //         }
-  //       `,
-  //       variables: { id: variantId },
-  //     });
-
-  //     const data = response.data.data;
-  //     if (data?.node?.priceV2) {
-  //       const { amount, currencyCode } = data.node.priceV2;
-  //       console.log(`Price: ${amount} ${currencyCode}`);
-  //       return { amount, currencyCode };
-  //     } else {
-  //       console.error("Variant price not found");
-  //       return null;
-  //     }
-  //   } catch (error) {
-  //     console.error(
-  //       "Error fetching variant price:",
-  //       error.response ? error.response.data : error.message
-  //     );
-  //     return null;
-  //   }
-  // };
-
-  // const fetchPrice = async () => {
-  //   const variantPrice = await getVariantPrice(globalVariantId);
-  //   if (variantPrice) {
-  //     console.log(
-  //       `Variant Price: ${variantPrice.amount} ${variantPrice.currencyCode}`
-  //     );
-  //   }
-  // };
-
-  // useEffect(() => {
-  //   fetchPrice();
-  // }, []);
-
   // Submit Handler
   const handleSubmit = async (values: any) => {
     if (!priceInWLD) {
@@ -405,6 +220,62 @@ const PurchaseForm = () => {
       setError(e.message);
     }
   };
+
+  const fetchSGDToUSDC = async () => {
+    try {
+      const response = await axios.get(
+        "https://api.coingecko.com/api/v3/simple/price",
+        {
+          params: {
+            ids: "usd-coin", // ID for USDC
+            vs_currencies: "sgd", // Compare against SGD
+          },
+        }
+      );
+
+      const data = response.data;
+      if (data["usd-coin"] && data["usd-coin"].sgd) {
+        const sgdToUSDC = 1 / data["usd-coin"].sgd; // Conversion: SGD → USDC
+        // console.log(`1 SGD = ${sgdToUSDC} USDC`);
+        return sgdToUSDC;
+      } else {
+        throw new Error("Conversion rate not available.");
+      }
+    } catch (error) {
+      console.error("Error fetching SGD to USDC rate:", error.message);
+      return null;
+    }
+  };
+
+  // Example usage
+
+  useEffect(() => {
+    if (
+      priceInSGD &&
+      conversionRateSGD_USD &&
+      typeof priceInSGD === "number" &&
+      typeof conversionRateSGD_USD === "number"
+    ) {
+      const rate = priceInSGD * conversionRateSGD_USD;
+      // const rate = 33
+      setPriceInUSD(rate);
+    } else {
+      setPriceInWLD(0); // Default value
+    }
+  }, [priceInSGD, conversionRateSGD_USD]);
+
+  useEffect(() => {
+    if (
+      priceInUSD &&
+      conversionRateUSDC_WLD &&
+      typeof priceInUSD === "number" &&
+      typeof conversionRateUSDC_WLD === "number"
+    ) {
+      setPriceInWLD(priceInUSD * conversionRateUSDC_WLD);
+    } else {
+      setPriceInWLD(0); // Default value
+    }
+  }, [priceInUSD, conversionRateUSDC_WLD]);
 
   return (
     <div className="h-full flex items-center justify-center pt-0 p-6">
@@ -513,7 +384,9 @@ const PurchaseForm = () => {
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full bg-[#07494E] text-white py-[4vw] px-[2vw] mt-[8vw] rounded-lg hover:bg-[#07494ebd] transition"
+              className={`w-full bg-[#07494E] text-white py-[4vw] px-[2vw] mt-[8vw] rounded-lg hover:bg-[#07494ebd] transition ${
+                priceInUSD && conversionRateUSDC_WLD ? "" : "disable"
+              }`}
             >
               PAY WITH {priceInWLD} WLD
               {/* Number(priceInWLD.toFixed(3)) */}
