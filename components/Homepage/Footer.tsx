@@ -135,7 +135,7 @@ const Footer = () => {
   return (
     <div className="flex flex-col justify-items-center w-full text-white bg-[#07494E] ">
       <div>
-        <div className="flex flex-row justify-between py-[3vw]  px-[7vw] bg-transparent max-w-md mx-auto text-[2.5vw]">
+        <div className="flex flex-row justify-center py-[3vw]  px-[7vw]  gap-[15vw] bg-transparent max-w-md mx-auto text-[2.5vw]">
           {/* Email Task */}
           <div
             onClick={() => handleClick("email")}
@@ -158,7 +158,7 @@ const Footer = () => {
           </div>
 
           {/* Twitter Task */}
-          <div
+          {/* <div
             onClick={() => {
               handleClick("twitter");
             }}
@@ -180,7 +180,7 @@ const Footer = () => {
               </div>
               <span className=" font-medium">Follow Twitter</span>
             </div>
-          </div>
+          </div> */}
 
           {/* Purchase Task */}
           <div
