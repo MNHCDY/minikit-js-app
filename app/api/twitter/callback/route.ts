@@ -34,8 +34,8 @@ export async function GET(req: NextRequest) {
     const twitterClient = new TwitterApi({
       appKey: process.env.TWITTER_API_KEY!,
       appSecret: process.env.TWITTER_API_SECRET!,
-      accessToken: oauth_token,
-      accessSecret: oauth_token_secret,
+      accessToken: process.env.TWITTER_ACCESS_TOKEN,
+      accessSecret: process.env.TWITTER_ACCESS_SECRET,
     });
 
     const { client: loggedClient } = await twitterClient.login(oauth_verifier);

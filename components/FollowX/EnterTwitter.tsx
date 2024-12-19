@@ -17,10 +17,12 @@ declare module "next-auth" {
 }
 
 const EnterTwitter = () => {
-  const [twitter_id, setTwitter_id] = useState("");
+  const [twitterHandle, settwitterHandle] = useState("");
   const [worldID, setWorldID] = useState(""); // Assuming you have the worldID token from some authentication source
   const [message, setMessage] = useState("");
   const router = useRouter();
+  const [result, setResult] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const goToAnotherPage = () => {
     router.push("/landing-page");
@@ -34,6 +36,36 @@ const EnterTwitter = () => {
       setWorldID(session.user?.name || ""); // Set worldID if session exists
     }
   }, [session]); // Only run when session changes
+
+  const checkTheFollower = async (e: any) => {
+    e.preventDefault();
+    setResult(null);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/checkFollower", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ twitterHandle }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setResult(
+          data.isFollowing
+            ? `${twitterHandle} follows you!`
+            : `${twitterHandle} does not follow you.`
+        );
+      } else {
+        setError(data.error || "An error occurred");
+      }
+    } catch (err) {
+      setError("Failed to check follower status.");
+    }
+  };
 
   const handleTwitterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,14 +88,14 @@ const EnterTwitter = () => {
         // If an entry with the world_id exists, update it
         const { error: updateError } = await supabase
           .from("users")
-          .update({ twitter_id })
+          .update({ twitterHandle })
           .eq("world_id", worldID);
 
         if (updateError) {
           setMessage("already exists!");
         } else {
           setMessage("processing further!");
-          window.location.href = `/api/twitter/oauth`;
+          // window.location.href = `/api/twitter/oauth`;
         }
       }
     } catch (error) {
@@ -142,14 +174,14 @@ const EnterTwitter = () => {
       </div>
       <div>
         <form
-          onSubmit={handleTwitterSubmit}
+          onSubmit={checkTheFollower}
           className="flex flex-col justify-center items-center gap-[10vw]"
         >
           <input
             type="text"
             placeholder="Enter your X handle"
-            value={twitter_id}
-            onChange={(e) => setTwitter_id(e.target.value)}
+            value={twitterHandle}
+            onChange={(e) => settwitterHandle(e.target.value)}
             required
             className="px-[3vw] py-[4.2vw] border-2 rounded-xl border-[#07494E] bg-white text-[#07494E] font-medium text-[5vw] focus:outline-none focus:border-[#07494E] w-full"
           />
