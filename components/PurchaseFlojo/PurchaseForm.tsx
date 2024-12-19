@@ -53,7 +53,7 @@ const PurchaseForm = () => {
     firstName: Yup.string().required("First name is required"),
     lastName: Yup.string().required("Last name is required"),
     address1: Yup.string().required("Address line 1 is required"),
-    address2: Yup.string().required("Address line 1 is required"),
+    address2: Yup.string().required("Address line 2 is required"),
     postalCode: Yup.string()
       .required("Postal code is required")
       .matches(/^\d{6}(-\d{6})?$/, "Invalid postal code"),
@@ -432,7 +432,7 @@ const PurchaseForm = () => {
                 priceInUSD && conversionRateUSDC_WLD ? "" : "disable"
               }`}
             >
-              PAY WITH {priceInWLD} WLD
+              PAY WITH {priceInWLD !== null ? Math.round(priceInWLD) : 0} WLD
               {/* Number(priceInWLD.toFixed(3)) */}
             </button>
           </Form>
