@@ -23,6 +23,7 @@ const EnterTwitter = () => {
   const router = useRouter();
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [points, setPoints] = useState<any | null>(null);
 
   const goToAnotherPage = () => {
     router.push("/landing-page");
@@ -37,7 +38,7 @@ const EnterTwitter = () => {
     }
   }, [session]); // Only run when session changes
 
-  const checkTheFollower = async (e: any) => {
+  const checkTheFollower = async (e: React.FormEvent) => {
     e.preventDefault();
     setResult(null);
     setError(null);
@@ -67,8 +68,15 @@ const EnterTwitter = () => {
     }
   };
 
+  const isValidTwitterHandle = (handle: string) =>
+    /^@[a-zA-Z0-9_]{1,15}$/.test(handle);
+
   const handleTwitterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isValidTwitterHandle(twitterHandle)) {
+      setMessage("Invalid Twitter handle.");
+      return;
+    }
 
     try {
       // Check if the world_id already exists in the "users" table
@@ -79,23 +87,38 @@ const EnterTwitter = () => {
         .single();
 
       if (fetchError && fetchError.code !== "PGRST116") {
-        // If there is an error that’s not "No rows found", display the message
+        console.error("Supabase Fetch Error:", fetchError);
         setMessage("Error checking world ID in Supabase.");
         return;
       }
 
       if (existingEntry) {
+        // window.location.href = `/api/twitter/oauth`;
         // If an entry with the world_id exists, update it
         const { error: updateError } = await supabase
           .from("users")
-          .update({ twitterHandle })
+          .update({ twitter_id: `${twitterHandle}` })
           .eq("world_id", worldID);
 
         if (updateError) {
           setMessage("already exists!");
         } else {
           setMessage("processing further!");
-          // window.location.href = `/api/twitter/oauth`;
+          await checkTheFollower(e);
+          const { data } = await supabase
+            .from("users")
+            .select("points")
+            .eq("world_id", worldID);
+
+          setPoints(data);
+          const { error: updateError } = await supabase
+            .from("users")
+            .update({ purchase_completed: true, points: `${points + 25}` })
+            .eq("world_id", worldID);
+
+          if (updateError) {
+            setError("already rewarded");
+          }
         }
       }
     } catch (error) {
@@ -105,14 +128,10 @@ const EnterTwitter = () => {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const success = params.get("success");
-    const error = params.get("error");
-
-    if (success) {
+    if (params.has("success"))
       toast.success("Twitter linked successfully! Points updated.");
-    }
-
-    if (error) {
+    if (params.has("error")) {
+      const error = params.get("error");
       switch (error) {
         case "unauthorized":
           toast.error("You must be logged in.");
@@ -174,7 +193,7 @@ const EnterTwitter = () => {
       </div>
       <div>
         <form
-          onSubmit={checkTheFollower}
+          onSubmit={handleTwitterSubmit}
           className="flex flex-col justify-center items-center gap-[10vw]"
         >
           <input
@@ -193,6 +212,7 @@ const EnterTwitter = () => {
           </button>
         </form>
         {message && <p>{message}</p>}
+        {error && <p className="text-red-500">{error}</p>}
       </div>
     </div>
   );

@@ -5,10 +5,12 @@ import { PayBlock } from "../Pay";
 import { useEffect, useState } from "react";
 import { ChainId, Token, WETH9 } from "@uniswap/sdk-core";
 import { getConversionRate } from "../Pay/ConversionUtils";
-import { loadGetInitialProps } from "next/dist/shared/lib/utils";
+import { useSession } from "next-auth/react";
+import supabase from "../Supabase/supabaseClient";
 const axios = require("axios");
 
 const PurchaseForm = () => {
+  const [worldID, setWorldID] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [priceInWLD, setPriceInWLD] = useState<number | null>(null);
   const [priceInUSD, setPriceInUSD] = useState<number | null>(null);
@@ -19,6 +21,16 @@ const PurchaseForm = () => {
   const [conversionRateSGD_USD, setConversionRateSGD_USD] = useState<
     number | string | null
   >(null);
+  const [points, setPoints] = useState<any | null>(null);
+
+  const { data: session } = useSession();
+
+  // Set the worldID when the session changes
+  useEffect(() => {
+    if (session) {
+      setWorldID(session.user?.name || ""); // Set worldID if session exists
+    }
+  }, [session]);
 
   // Create token instances (WLD and WETH)
   const WLD = new Token(
@@ -212,6 +224,38 @@ const PurchaseForm = () => {
 
       if (paymentSuccessful) {
         await createCheckout(values);
+        try {
+          const { data: existingEntry, error: fetchError } = await supabase
+            .from("users")
+            .select("*")
+            .eq("world_id", worldID)
+            .single();
+
+          if (fetchError && fetchError.code !== "PGRST116") {
+            console.error("Supabase Fetch Error:", fetchError);
+            setError("Error checking world ID in Supabase.");
+            return;
+          }
+          const { data } = await supabase
+            .from("users")
+            .select("points")
+            .eq("world_id", worldID);
+
+          setPoints(data);
+
+          if (existingEntry) {
+            const { error: updateError } = await supabase
+              .from("users")
+              .update({ purchase_completed: true, points: `${points + 40}` })
+              .eq("world_id", worldID);
+
+            if (updateError) {
+              setError("already rewarded");
+            }
+          }
+        } catch (error) {
+          setError("An unexpected error occurred.");
+        }
         setError(null); // Clear any previous errors
       } else {
         setError("Payment failed. Please try again.");
