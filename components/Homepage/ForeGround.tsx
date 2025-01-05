@@ -16,11 +16,11 @@ const ForeGround = () => {
       title: "points earned",
     },
   ];
-  const router = useRouter();
+  // const router = useRouter();
 
-  const goToAnotherPage = () => {
-    router.push("/reward-page"); // specify the route
-  };
+  // const goToAnotherPage = () => {
+  //   router.push("/reward-page"); // specify the route
+  // };
   return (
     <div className="w-full  flex flex-col justify-center items-center gap-[16vw]">
       <div className="w-[88vw] pt-[18vw] flex flex-col justify-center items-start gap-[18vw] ">

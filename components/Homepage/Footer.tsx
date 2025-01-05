@@ -5,7 +5,6 @@ import supabase from "../Supabase/supabaseClient";
 import { useSession } from "next-auth/react";
 import "react-toastify/dist/ReactToastify.css";
 import { MdOutlineEmail } from "react-icons/md";
-import { FaXTwitter } from "react-icons/fa6";
 import { IoCartOutline } from "react-icons/io5";
 
 type TaskType = "email" | "worldID" | "twitter" | "purchase";
@@ -14,7 +13,6 @@ const Footer = () => {
   const router = useRouter();
   const { data: session } = useSession();
   const [isEmailRegistered, setIsEmailRegistered] = useState(false);
-  // const [isCheckingPurchase, setIsCheckingPurchase] = useState(false);
   const [clickedTasks, setClickedTasks] = useState<{
     email: boolean;
     twitter: boolean;
@@ -25,7 +23,7 @@ const Footer = () => {
     purchase: false,
   });
 
-  const [isModalOpen, setIsModalOpen] = useState(false); // State to manage modal visibility
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchTaskCompletionStatus = async () => {
@@ -99,9 +97,9 @@ const Footer = () => {
         case "email":
           router.push("/enter-email");
           break;
-        case "twitter":
-          router.push("/follow-x");
-          break;
+        // case "twitter":
+        //   router.push("/follow-x");
+        //   break;
         // case "purchase":
         //   router.push("/purchase-flojo");
         //   break;
@@ -156,32 +154,6 @@ const Footer = () => {
               <span className=" font-normal">Connect email</span>
             </div>
           </div>
-
-          {/* Twitter Task */}
-          {/* <div
-            onClick={() => {
-              handleClick("twitter");
-            }}
-            className={`flex flex-col items-center justify-between  border-2 rounded-xl cursor-pointer border-[#07494E]  ${
-              !isEmailRegistered ? "opacity-50 cursor-not-allowed" : ""
-            }`}
-          >
-            <div className="flex flex-col items-center space-y-2">
-              <div
-                className={`w-[12vw] h-[12vw] rounded-full border-2 border-white flex items-center justify-center ${
-                  clickedTasks.twitter
-                    ? "bg-[#07494E] text-white"
-                    : "bg-white text-[#07494E]"
-                }`}
-              >
-                <span className=" font-bold text-[8vw] ">
-                  <FaXTwitter />
-                </span>
-              </div>
-              <span className=" font-medium">Follow Twitter</span>
-            </div>
-          </div> */}
-
           {/* Purchase Task */}
           <div
             onClick={() => {
@@ -207,7 +179,6 @@ const Footer = () => {
               <span className=" font-medium">Purchase Flojo</span>
             </div>
           </div>
-
           {/* Modal */}
           {isModalOpen && (
             <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">

@@ -84,9 +84,9 @@ export const SignIn = () => {
     }
   }, [session, router]);
 
-  const initiateOAuth = () => {
-    window.location.href = "/api/twitter/oauth"; // Redirect to the OAuth endpoint for Twitter
-  };
+  // const initiateOAuth = () => {
+  //   window.location.href = "/api/twitter/oauth"; // Redirect to the OAuth endpoint for Twitter
+  // };
 
   if (session) {
     return (
