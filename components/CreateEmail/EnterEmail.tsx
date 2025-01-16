@@ -93,14 +93,14 @@ const EnterEmail = () => {
         <div>
           <button
             onClick={goToAnotherPage}
-            className="text-[10vw] font-extralight"
+            className="text-4xl font-extralight"
           >
             <FaArrowLeft />
           </button>
         </div>
         <div className="p-[4vw] bg-white/40 backdrop-blur-sm mr-[1vw] rounded-xl flex flex-col gap-[5vw]">
           <div className="flex justify-between items-end">
-            <h1 className="text-[8.5vw] font-bold leading-[10vw] ">
+            <h1 className="text-4xl font-bold leading-[10vw] ">
               Enter your email <br />
             </h1>
             <div className="text-[2.5vw] font-bold text-white pb-[1.5vw] ">

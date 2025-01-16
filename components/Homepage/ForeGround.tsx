@@ -22,17 +22,17 @@ const ForeGround = () => {
   //   router.push("/reward-page"); // specify the route
   // };
   return (
-    <div className="w-full  flex flex-col justify-center items-center gap-[16vw]">
-      <div className="w-[88vw] pt-[18vw] flex flex-col justify-center items-start gap-[18vw] ">
+    <div className="w-full  flex flex-col justify-center items-center gap-[10vh]">
+      <div className="w-[88vw] pt-[8vh] flex flex-col justify-center items-start gap-[10vh] ">
         <div className=" flex flex-col justify-center items-start gap-[10vw]">
           <div className=" backdrop-blur-sm w-[68vw] pl-[5vw]">
             <h1 className="text-start text-[9vw] font-bold leading-[12vw] text-[#07494E]">
               Meet the World’s First Productivity Drink
             </h1>
           </div>
-          <div className="bg-white/40 backdrop-blur-sm p-[4vw] w-[87vw] text-[#07494E] rounded-lg leading-[13vw]">
+          <div className="bg-white/40 backdrop-blur-sm px-[4vw] pt-[2vh] w-[87vw] text-[#07494E] rounded-lg leading-[13vw]">
             {data?.map((item: any) => (
-              <p className="uppercase text-[5vw] " key={item?.id}>
+              <p className="uppercase text-lg pb-[2vh]" key={item?.id}>
                 <span className="font-bold text-[9vw]">{item?.number}</span>
                 &nbsp;&nbsp;
                 {item?.title}
@@ -40,8 +40,8 @@ const ForeGround = () => {
             ))}
           </div>
         </div>
-        <div className="bg-[#07494E] py-[8vw] px-[10vw] rounded-lg leading-[8vw] text-white w-[87vw]">
-          <p className="font-bold text-[6vw] text-center">
+        <div className="bg-[#07494E] py-[4vh] px-[10vw] rounded-lg leading-[8vw] text-white w-[87vw]">
+          <p className="font-bold text-2xl text-center">
             Complete the tasks below to earn points
           </p>
         </div>

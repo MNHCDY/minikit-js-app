@@ -115,8 +115,8 @@ export const SignIn = () => {
 
           {/* Foreground Content layered over the Background */}
           <div className="absolute inset-0 z-10">
-            <div className="w-full  flex flex-col justify-center items-center gap-[16vw]">
-              <div className="w-[88vw] pt-[18vw] flex flex-col justify-between gap-[20vw]">
+            <div className="w-full  flex flex-col justify-center items-center gap-[8vh]">
+              <div className="w-[88vw] pt-[8vh] flex flex-col justify-between gap-[8vh]">
                 <div className=" backdrop-blur-sm w-[68vw] pl-[5vw]">
                   <h1 className="text-start text-[10vw] font-bold leading-[13vw] text-[#07494E]">
                     Meet the World’s First Productivity Drink

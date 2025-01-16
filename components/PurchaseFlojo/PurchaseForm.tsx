@@ -323,7 +323,7 @@ const PurchaseForm = () => {
 
   return (
     <div className="h-full flex items-center justify-center pt-0 p-6">
-      <div className="w-full max-w-lg  py-[5vw] pt-[2vw] ">
+      <div className="w-full max-w-lg  py-[5vh] pt-[2vh] ">
         <Formik
           initialValues={initialValues}
           validationSchema={validationSchema}
@@ -331,7 +331,7 @@ const PurchaseForm = () => {
         >
           <Form>
             {/* First Name */}
-            <div className="mb-[3vw]">
+            <div className="mb-[1vh]">
               <label
                 htmlFor="firstName"
                 className="block text-sm font-medium text-[#07494E]"
@@ -341,7 +341,7 @@ const PurchaseForm = () => {
                 id="firstName"
                 name="firstName"
                 placeholder="Enter your first name"
-                className="text-[4vw] w-full mt-2 p-[4vw] border-2 border-[#07494E] rounded-lg focus:ring-4 focus:ring-[#07494E] text-[#07494E]"
+                className="text-base w-full mt-2 px-4 py-[1.6vh] border-2 border-[#07494E] rounded-lg focus:ring-4 focus:ring-[#07494E] text-[#07494E]"
               />
               <ErrorMessage
                 name="firstName"
@@ -351,7 +351,7 @@ const PurchaseForm = () => {
             </div>
 
             {/* Last Name */}
-            <div className="mb-[3vw]">
+            <div className="mb-[1vh]">
               <label
                 htmlFor="lastName"
                 className="block text-sm font-medium text-[#07494E]"
@@ -361,7 +361,7 @@ const PurchaseForm = () => {
                 id="lastName"
                 name="lastName"
                 placeholder="Enter your last name"
-                className="text-[4vw] w-full mt-2 p-[4vw] border-2 border-[#07494E] rounded-lg focus:ring-4 focus:ring-[#07494E] text-[#07494E]"
+                className="text-base w-full mt-2 px-4 py-[1.6vh] border-2 border-[#07494E] rounded-lg focus:ring-4 focus:ring-[#07494E] text-[#07494E]"
               />
               <ErrorMessage
                 name="lastName"
@@ -371,7 +371,7 @@ const PurchaseForm = () => {
             </div>
 
             {/* Address Line 1 */}
-            <div className="mb-[3vw]">
+            <div className="mb-[1vh]">
               <label
                 htmlFor="address1"
                 className="block text-sm font-medium text-[#07494E]"
@@ -381,7 +381,7 @@ const PurchaseForm = () => {
                 id="address1"
                 name="address1"
                 placeholder="Enter your address line 1"
-                className="text-[4vw] w-full mt-2 p-[4vw] border-2 border-[#07494E] rounded-lg focus:ring-4 focus:ring-[#07494E] text-[#07494E]"
+                className="text-base w-full mt-2 px-4 py-[1.6vh] border-2 border-[#07494E] rounded-lg focus:ring-4 focus:ring-[#07494E] text-[#07494E]"
               />
               <ErrorMessage
                 name="address1"
@@ -391,7 +391,7 @@ const PurchaseForm = () => {
             </div>
 
             {/* Address Line 2 */}
-            <div className="mb-[3vw]">
+            <div className="mb-[1vh]">
               <label
                 htmlFor="address2"
                 className="block text-sm font-medium text-[#07494E]"
@@ -401,12 +401,12 @@ const PurchaseForm = () => {
                 id="address2"
                 name="address2"
                 placeholder="Enter your address line 2"
-                className="text-[4vw] w-full mt-2 p-[4vw] border-2 border-[#07494E] rounded-lg focus:ring-4 focus:ring-[#07494E] text-[#07494E]"
+                className="text-base w-full mt-2 px-4 py-[1.6vh] border-2 border-[#07494E] rounded-lg focus:ring-4 focus:ring-[#07494E] text-[#07494E]"
               />
             </div>
 
             {/* Postal Code */}
-            <div className="mb-[3vw]">
+            <div className="mb-[1vh]">
               <label
                 htmlFor="postalCode"
                 className="block text-sm font-medium text-[#07494E]"
@@ -416,7 +416,7 @@ const PurchaseForm = () => {
                 id="postalCode"
                 name="postalCode"
                 placeholder="Enter your postal code"
-                className="text-[4vw] w-full mt-2 p-[4vw] border-2 border-[#07494E] rounded-lg focus:ring-4 focus:ring-[#07494E] text-[#07494E]"
+                className="text-base w-full mt-2 px-4 py-[1.6vh] border-2 border-[#07494E] rounded-lg focus:ring-4 focus:ring-[#07494E] text-[#07494E]"
               />
               <ErrorMessage
                 name="postalCode"
@@ -428,7 +428,7 @@ const PurchaseForm = () => {
             {/* Submit Button */}
             <button
               type="submit"
-              className={`w-full bg-[#07494E] text-white py-[4vw] px-[2vw] mt-[8vw] rounded-lg hover:bg-[#07494ebd] transition ${
+              className={`w-full bg-[#07494E] text-white py-[2vh] px-[2vw] mt-[8vw] rounded-lg hover:bg-[#07494ebd] transition ${
                 priceInUSD && conversionRateUSDC_WLD ? "" : "disable"
               }`}
             >

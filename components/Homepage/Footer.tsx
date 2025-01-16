@@ -157,7 +157,7 @@ const Footer = () => {
     >
       <div className="flex flex-col justify-items-center w-full text-white bg-[#07494E] ">
         <div>
-          <div className="flex flex-row justify-center py-[3vw]  px-[7vw]  gap-[15vw] bg-transparent max-w-md mx-auto text-[2.5vw]">
+          <div className="flex flex-row justify-between py-[1vh]  px-7   bg-transparent max-w-md mx-auto text-xs">
             {/* Email Task */}
             <div
               onClick={() => handleClick("email")}
@@ -165,13 +165,13 @@ const Footer = () => {
             >
               <div className="flex flex-col items-center space-y-2">
                 <div
-                  className={`w-[12vw] h-[12vw] rounded-full border-2 border-white flex items-center justify-center ${
+                  className={`w-10 h-10 rounded-full border-2 border-white flex items-center justify-center ${
                     clickedTasks.email
                       ? "bg-[#07494E] text-white"
                       : "bg-white text-[#07494E]"
                   }`}
                 >
-                  <span className=" font-bold text-[7vw]">
+                  <span className=" font-bold text-xl">
                     <MdOutlineEmail />
                   </span>
                 </div>
@@ -192,13 +192,13 @@ const Footer = () => {
             >
               <div className="flex flex-col items-center space-y-2">
                 <div
-                  className={`w-[12vw] h-[12vw] rounded-full border-2 border-white flex items-center justify-center ${
+                  className={`w-10 h-10 rounded-full border-2 border-white flex items-center justify-center ${
                     clickedTasks.purchase
                       ? "bg-[#07494E] text-white"
                       : "bg-white text-[#07494E]"
                   }`}
                 >
-                  <span className=" font-bold text-[8vw] ">
+                  <span className=" font-bold text-xl ">
                     <IoCartOutline />
                   </span>
                 </div>
