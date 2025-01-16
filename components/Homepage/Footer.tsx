@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import "react-toastify/dist/ReactToastify.css";
 import { MdOutlineEmail } from "react-icons/md";
 import { IoCartOutline } from "react-icons/io5";
+import ReactDOM from "react-dom";
 
 type TaskType = "email" | "worldID" | "twitter" | "purchase";
 
@@ -24,6 +25,24 @@ const Footer = () => {
   });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > lastScrollY) {
+        // Scrolling down
+        setIsVisible(false);
+      } else {
+        // Scrolling up
+        setIsVisible(true);
+      }
+      setLastScrollY(window.scrollY);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [lastScrollY]);
 
   useEffect(() => {
     const fetchTaskCompletionStatus = async () => {
@@ -131,82 +150,101 @@ const Footer = () => {
   };
 
   return (
-    <div className="flex flex-col justify-items-center w-full text-white bg-[#07494E] ">
-      <div>
-        <div className="flex flex-row justify-center py-[3vw]  px-[7vw]  gap-[15vw] bg-transparent max-w-md mx-auto text-[2.5vw]">
-          {/* Email Task */}
-          <div
-            onClick={() => handleClick("email")}
-            className="flex flex-col items-center justify-between  border-2 rounded-xl cursor-pointer border-[#07494E]  "
-          >
-            <div className="flex flex-col items-center space-y-2">
-              <div
-                className={`w-[12vw] h-[12vw] rounded-full border-2 border-white flex items-center justify-center ${
-                  clickedTasks.email
-                    ? "bg-[#07494E] text-white"
-                    : "bg-white text-[#07494E]"
-                }`}
-              >
-                <span className=" font-bold text-[7vw]">
-                  <MdOutlineEmail />
-                </span>
-              </div>
-              <span className=" font-normal">Connect email</span>
-            </div>
-          </div>
-          {/* Purchase Task */}
-          <div
-            onClick={() => {
-              handleClick("purchase");
-            }}
-            className={`flex flex-col items-center justify-between  border-2 rounded-xl cursor-pointer border-[#07494E] ${
-              !isEmailRegistered ? "opacity-50 cursor-not-allowed" : ""
-            }
-              `}
-          >
-            <div className="flex flex-col items-center space-y-2">
-              <div
-                className={`w-[12vw] h-[12vw] rounded-full border-2 border-white flex items-center justify-center ${
-                  clickedTasks.purchase
-                    ? "bg-[#07494E] text-white"
-                    : "bg-white text-[#07494E]"
-                }`}
-              >
-                <span className=" font-bold text-[8vw] ">
-                  <IoCartOutline />
-                </span>
-              </div>
-              <span className=" font-medium">Purchase Flojo</span>
-            </div>
-          </div>
-          {/* Modal */}
-          {isModalOpen && (
-            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-              <div className="bg-white text-black p-6 rounded-lg shadow-lg mx-4">
-                <h2 className="text-lg font-bold mb-4">
-                  Are you from Singapore?
-                </h2>
-                <p className="text-sm mb-6">
-                  We currently do not ship outside of Singapore. Please follow
-                  our socials for the latest news.
-                </p>
-                <div className="flex justify-end space-x-4">
-                  <button
-                    onClick={() => setIsModalOpen(false)}
-                    className="px-4 py-2 bg-gray-300 rounded-md"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleConfirmPurchase}
-                    className="px-4 py-2 bg-[#07494E] text-white rounded-md"
-                  >
-                    Confirm
-                  </button>
+    <div
+      className={`fixed bottom-0 left-0 w-full bg-white z-20 transition-transform duration-300 ${
+        isVisible ? "translate-y-0" : "translate-y-full"
+      }`}
+    >
+      <div className="flex flex-col justify-items-center w-full text-white bg-[#07494E] ">
+        <div>
+          <div className="flex flex-row justify-center py-[3vw]  px-[7vw]  gap-[15vw] bg-transparent max-w-md mx-auto text-[2.5vw]">
+            {/* Email Task */}
+            <div
+              onClick={() => handleClick("email")}
+              className="flex flex-col items-center justify-between  border-2 rounded-xl cursor-pointer border-[#07494E]  "
+            >
+              <div className="flex flex-col items-center space-y-2">
+                <div
+                  className={`w-[12vw] h-[12vw] rounded-full border-2 border-white flex items-center justify-center ${
+                    clickedTasks.email
+                      ? "bg-[#07494E] text-white"
+                      : "bg-white text-[#07494E]"
+                  }`}
+                >
+                  <span className=" font-bold text-[7vw]">
+                    <MdOutlineEmail />
+                  </span>
                 </div>
+                <span className=" font-normal">Connect email</span>
               </div>
             </div>
-          )}
+            {/* Purchase Task */}
+            <div
+              onClick={() => {
+                handleClick("purchase");
+              }}
+              // className={`flex flex-col items-center justify-between  border-2 rounded-xl cursor-pointer border-[#07494E]
+              //    ${
+              //   !isEmailRegistered ? "opacity-50 cursor-not-allowed" : ""
+              // }
+              // `}
+              className="flex flex-col items-center justify-between  border-2 rounded-xl cursor-pointer border-[#07494E]"
+            >
+              <div className="flex flex-col items-center space-y-2">
+                <div
+                  className={`w-[12vw] h-[12vw] rounded-full border-2 border-white flex items-center justify-center ${
+                    clickedTasks.purchase
+                      ? "bg-[#07494E] text-white"
+                      : "bg-white text-[#07494E]"
+                  }`}
+                >
+                  <span className=" font-bold text-[8vw] ">
+                    <IoCartOutline />
+                  </span>
+                </div>
+                <span className=" font-medium">Purchase Flojo</span>
+              </div>
+            </div>
+            {/* Modal */}
+            {isModalOpen &&
+              ReactDOM.createPortal(
+                <div
+                  className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
+                  style={{
+                    position: "fixed",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                  }}
+                >
+                  <div className="bg-white text-black p-6 rounded-lg shadow-lg mx-4">
+                    <h2 className="text-lg font-bold mb-4">
+                      Are you from Singapore?
+                    </h2>
+                    <p className="text-sm mb-6">
+                      We currently do not ship outside of Singapore. Please
+                      follow our socials for the latest news.
+                    </p>
+                    <div className="flex justify-end space-x-4">
+                      <button
+                        onClick={() => setIsModalOpen(false)}
+                        className="px-4 py-2 bg-gray-300 rounded-md"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleConfirmPurchase}
+                        className="px-4 py-2 bg-[#07494E] text-white rounded-md"
+                      >
+                        Confirm
+                      </button>
+                    </div>
+                  </div>
+                </div>,
+                document.body // Render modal in the <body> element
+              )}
+          </div>
         </div>
       </div>
     </div>
