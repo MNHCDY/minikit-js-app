@@ -157,7 +157,7 @@ const Footer = () => {
     >
       <div className="flex flex-col justify-items-center w-full text-white bg-[#07494E] ">
         <div>
-          <div className="flex flex-row justify-center py-[1vh]  gap-14   bg-transparent max-w-md mx-auto text-xs">
+          <div className="flex flex-row justify-center py-[1.5vh]  gap-14   bg-transparent max-w-md mx-auto text-xs">
             {/* Email Task */}
             <div
               onClick={() => handleClick("email")}
