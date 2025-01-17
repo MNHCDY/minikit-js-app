@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import "react-toastify/dist/ReactToastify.css";
 import { MdOutlineEmail } from "react-icons/md";
 import { IoCartOutline } from "react-icons/io5";
+import { useFooterContext } from "@/app/hooks/FooterContext";
 import ReactDOM from "react-dom";
 
 type TaskType = "email" | "worldID" | "twitter" | "purchase";
@@ -25,24 +26,7 @@ const Footer = () => {
   });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isVisible, setIsVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > lastScrollY) {
-        // Scrolling down
-        setIsVisible(false);
-      } else {
-        // Scrolling up
-        setIsVisible(true);
-      }
-      setLastScrollY(window.scrollY);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [lastScrollY]);
+  const { hideFooter } = useFooterContext();
 
   useEffect(() => {
     const fetchTaskCompletionStatus = async () => {
@@ -152,7 +136,7 @@ const Footer = () => {
   return (
     <div
       className={`fixed bottom-0 left-0 w-full bg-white z-20 transition-transform duration-300 ${
-        isVisible ? "translate-y-0" : "translate-y-full"
+        hideFooter ? "translate-y-full" : "translate-y-0"
       }`}
     >
       <div className="flex flex-col justify-items-center w-full text-white bg-[#07494E] ">

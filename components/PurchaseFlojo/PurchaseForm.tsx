@@ -7,6 +7,7 @@ import { ChainId, Token, WETH9 } from "@uniswap/sdk-core";
 import { getConversionRate } from "../Pay/ConversionUtils";
 import { useSession } from "next-auth/react";
 import supabase from "../Supabase/supabaseClient";
+import { useFooterContext } from "@/app/hooks/FooterContext";
 const axios = require("axios");
 
 const PurchaseForm = () => {
@@ -22,6 +23,7 @@ const PurchaseForm = () => {
     number | string | null
   >(null);
   const [points, setPoints] = useState<any | null>(null);
+  const { setHideFooter } = useFooterContext();
 
   const { data: session } = useSession();
 
@@ -337,6 +339,8 @@ const PurchaseForm = () => {
                 className="block text-sm font-medium text-[#07494E]"
               ></label>
               <Field
+                onFocus={() => setHideFooter(true)}
+                onBlur={() => setHideFooter(false)}
                 type="text"
                 id="firstName"
                 name="firstName"
@@ -357,6 +361,8 @@ const PurchaseForm = () => {
                 className="block text-sm font-medium text-[#07494E]"
               ></label>
               <Field
+                onFocus={() => setHideFooter(true)}
+                onBlur={() => setHideFooter(false)}
                 type="text"
                 id="lastName"
                 name="lastName"
@@ -377,6 +383,8 @@ const PurchaseForm = () => {
                 className="block text-sm font-medium text-[#07494E]"
               ></label>
               <Field
+                onFocus={() => setHideFooter(true)}
+                onBlur={() => setHideFooter(false)}
                 type="text"
                 id="address1"
                 name="address1"
@@ -397,6 +405,8 @@ const PurchaseForm = () => {
                 className="block text-sm font-medium text-[#07494E]"
               ></label>
               <Field
+                onFocus={() => setHideFooter(true)}
+                onBlur={() => setHideFooter(false)}
                 type="text"
                 id="address2"
                 name="address2"
@@ -412,6 +422,8 @@ const PurchaseForm = () => {
                 className="block text-sm font-medium text-[#07494E]"
               ></label>
               <Field
+                onFocus={() => setHideFooter(true)}
+                onBlur={() => setHideFooter(false)}
                 type="text"
                 id="postalCode"
                 name="postalCode"
@@ -428,6 +440,8 @@ const PurchaseForm = () => {
             {/* Submit Button */}
             <button
               type="submit"
+              onFocus={() => setHideFooter(true)}
+              onBlur={() => setHideFooter(false)}
               className={`w-full bg-[#07494E] text-white py-[2vh] px-[2vw] mt-[8vw] rounded-lg hover:bg-[#07494ebd] transition ${
                 priceInUSD && conversionRateUSDC_WLD ? "" : "disable"
               }`}
