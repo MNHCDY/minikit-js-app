@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
       {
         method: "GET",
         headers: {
-          Authorization: `Bearer ${process.env.DEV_PORTAL_API_KEY}`,
+          Authorization: `Bearer ${process.env.API_KEY}`,
         },
       }
     );
