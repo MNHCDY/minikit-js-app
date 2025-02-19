@@ -152,7 +152,7 @@ export const Login = () => {
                   className="bg-[#07494E] text-white py-[3vw] w-[48vw] rounded-lg text-[5vw] font-bold uppercase"
                   onClick={handleLogin}
                 >
-                  Sign in with Web3Auth
+                  Sign in
                 </button>
               </div>
             </div>
