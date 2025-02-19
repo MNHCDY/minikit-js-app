@@ -9,9 +9,14 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@ethersproject/providers": "^5.7.2",
     "@shopify/shopify-api": "^11.6.1",
     "@supabase/supabase-js": "^2.46.1",
     "@uniswap/sdk-core": "^6.1.1",
+    "@web3auth/base": "^9.6.0",
+    "@web3auth/ethereum-provider": "^9.6.0",
+    "@web3auth/modal": "^9.6.0",
+    "@web3auth/openlogin-adapter": "^8.12.4",
     "@worldcoin/id": "^0.9.2",
     "@worldcoin/minikit-js": "1.1.1",
     "axios": "^1.7.7",
