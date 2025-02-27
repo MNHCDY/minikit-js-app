@@ -10,15 +10,13 @@ export const initWeb3Auth = async () => {
     throw new Error("Web3Auth Client ID is missing! Check your .env file.");
   }
 
-  // asd
   // ✅ Create a private key provider (WITH required arguments)
   const privateKeyProvider = new EthereumPrivateKeyProvider({
     config: {
       chainConfig: {
         chainNamespace: CHAIN_NAMESPACES.EIP155, // Ethereum-based chains
         chainId: "0x1", // Ethereum Mainnet
-        rpcTarget:
-          "https://mainnet.infura.io/v3/a6f0ddebcc1743b697e496f094c7e15c", // Replace with your Infura RPC
+        rpcTarget: process.env.NEXT_PUBLIC_CONVERSION_OF_COIN_URL || "",
       },
     },
   });
@@ -29,8 +27,7 @@ export const initWeb3Auth = async () => {
     chainConfig: {
       chainNamespace: CHAIN_NAMESPACES.EIP155,
       chainId: "0x1",
-      rpcTarget:
-        "https://mainnet.infura.io/v3/a6f0ddebcc1743b697e496f094c7e15c",
+      rpcTarget: process.env.NEXT_PUBLIC_CONVERSION_OF_COIN_URL || "",
     },
     privateKeyProvider, // ✅ Now correctly initialized
   });
