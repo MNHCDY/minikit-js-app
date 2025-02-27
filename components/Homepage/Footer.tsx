@@ -2,51 +2,60 @@
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import supabase from "../Supabase/supabaseClient";
-import { useSession } from "next-auth/react";
-import "react-toastify/dist/ReactToastify.css";
 import { MdOutlineEmail } from "react-icons/md";
 import { IoCartOutline } from "react-icons/io5";
 import { useFooterContext } from "@/app/hooks/FooterContext";
 import ReactDOM from "react-dom";
+import { initWeb3Auth, getWalletAddress } from "../../app/lib/web3auth";
 
-type TaskType = "email" | "worldID" | "twitter" | "purchase";
+type TaskType = "email" | "purchase";
 
 const Footer = () => {
   const router = useRouter();
-  const { data: session } = useSession();
   const [isEmailRegistered, setIsEmailRegistered] = useState(false);
   const [clickedTasks, setClickedTasks] = useState<{
     email: boolean;
-    twitter: boolean;
     purchase: boolean;
   }>({
     email: false,
-    twitter: false,
     purchase: false,
   });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { hideFooter } = useFooterContext();
+  const [verifierId, setVerifierId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchTaskCompletionStatus = async () => {
       try {
-        const worldId = session?.user?.name;
+        const web3auth = await initWeb3Auth();
+        const provider = await web3auth.connect();
+        if (!provider) {
+          throw new Error("Wallet is not connected.");
+        }
+
+        const userInfo = await web3auth.getUserInfo();
+        console.log("User Info:", userInfo);
+
+        const fetchedVerifierId = userInfo?.verifierId || null;
+        setVerifierId(fetchedVerifierId);
+
+        if (!fetchedVerifierId) return;
+
         const { data, error } = await supabase
           .from("users")
-          .select("email, twitter_id, purchase_completed")
-          .eq("world_id", worldId)
+          .select("email, purchase_completed")
+          .eq("verifier_id", fetchedVerifierId)
           .single();
 
         if (error) throw error;
 
         if (data) {
           setClickedTasks({
-            email: !!data.email, // Set to true if email exists
-            twitter: !!data.twitter_id, // Set to true if twitter_id exists
+            email: !!data.email,
             purchase: data.purchase_completed,
           });
-          setIsEmailRegistered(!!data.email); // Set to true if email exists
+          setIsEmailRegistered(!!data.email);
         }
       } catch (error) {
         console.error(
@@ -56,34 +65,31 @@ const Footer = () => {
       }
     };
 
-    if (session) {
-      fetchTaskCompletionStatus();
-    }
-  }, [session]);
+    fetchTaskCompletionStatus();
+  }, []);
 
   const handleClick = async (task: TaskType) => {
     if (!isEmailRegistered && task !== "email") return;
+    if (!verifierId) return;
 
     const updatedClickedTasks = { ...clickedTasks, [task]: true };
     setClickedTasks(updatedClickedTasks);
 
     try {
-      const worldId = session?.user?.name;
-
-      // Use a more flexible type for updateData
       const updateData: Record<string, any> = {
         purchase_completed: updatedClickedTasks.purchase,
       };
 
-      // Conditionally add email and twitter_id if they are completed
-      if (updatedClickedTasks.email) updateData.email = session?.user?.email;
-      if (updatedClickedTasks.twitter)
-        updateData.twitter_id = "twitter_user_id"; // Replace as needed
+      if (updatedClickedTasks.email) {
+        const web3auth = await initWeb3Auth();
+        const userInfo = await web3auth.getUserInfo();
+        updateData.email = userInfo?.email || null;
+      }
 
       const { error } = await supabase
         .from("users")
         .update(updateData)
-        .eq("world_id", worldId);
+        .eq("verifier_id", verifierId);
 
       if (error) throw error;
 
@@ -92,7 +98,7 @@ const Footer = () => {
       }
 
       if (task === "purchase") {
-        setIsModalOpen(true); // Open the modal
+        setIsModalOpen(true);
         return;
       }
 
@@ -100,12 +106,6 @@ const Footer = () => {
         case "email":
           router.push("/enter-email");
           break;
-        // case "twitter":
-        //   router.push("/follow-x");
-        //   break;
-        // case "purchase":
-        //   router.push("/purchase-flojo");
-        //   break;
         default:
           break;
       }
@@ -117,13 +117,13 @@ const Footer = () => {
   const handleConfirmPurchase = async () => {
     setIsModalOpen(false);
 
-    try {
-      const worldId = session?.user?.name;
+    if (!verifierId) return;
 
+    try {
       const { error } = await supabase
         .from("users")
         .update({ purchase_completed: true })
-        .eq("world_id", worldId);
+        .eq("verifier_id", verifierId);
 
       if (error) throw error;
 
@@ -141,11 +141,11 @@ const Footer = () => {
     >
       <div className="flex flex-col justify-items-center w-full text-white bg-[#07494E] ">
         <div>
-          <div className="flex flex-row justify-center py-[1.5vh]  gap-14   bg-transparent max-w-md mx-auto text-xs">
+          <div className="flex flex-row justify-center py-[1.5vh] gap-14 bg-transparent max-w-md mx-auto text-xs">
             {/* Email Task */}
             <div
               onClick={() => handleClick("email")}
-              className="flex flex-col items-center justify-between  border-2 rounded-xl cursor-pointer border-[#07494E]  "
+              className="flex flex-col items-center justify-between border-2 rounded-xl cursor-pointer border-[#07494E]"
             >
               <div className="flex flex-col items-center space-y-2">
                 <div
@@ -167,12 +167,7 @@ const Footer = () => {
               onClick={() => {
                 handleClick("purchase");
               }}
-              // className={`flex flex-col items-center justify-between  border-2 rounded-xl cursor-pointer border-[#07494E]
-              //    ${
-              //   !isEmailRegistered ? "opacity-50 cursor-not-allowed" : ""
-              // }
-              // `}
-              className="flex flex-col items-center justify-between  border-2 rounded-xl cursor-pointer border-[#07494E]"
+              className="flex flex-col items-center justify-between border-2 rounded-xl cursor-pointer border-[#07494E]"
             >
               <div className="flex flex-col items-center space-y-2">
                 <div

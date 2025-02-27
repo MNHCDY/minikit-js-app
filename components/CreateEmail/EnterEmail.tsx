@@ -17,7 +17,7 @@ declare module "next-auth" {
 
 const EnterEmail = () => {
   const [email, setEmail] = useState("");
-  const [worldID, setWorldID] = useState(""); // Assuming you have the worldID token from some authentication source
+  const [verifierID, setVerifierID] = useState(""); // Updated from worldID
   const [message, setMessage] = useState("");
   const router = useRouter();
 
@@ -27,10 +27,10 @@ const EnterEmail = () => {
 
   const { data: session } = useSession();
 
-  // Set the worldID when the session changes
+  // Set the verifierID when the session changes
   useEffect(() => {
     if (session) {
-      setWorldID(session.user?.name || ""); // Set worldID if session exists
+      setVerifierID(session.user?.name || ""); // Set verifierID if session exists
     }
   }, [session]); // Only run when session changes
 
@@ -38,42 +38,40 @@ const EnterEmail = () => {
     e.preventDefault();
 
     try {
-      // Check if the world_id already exists in the "users" table
+      // Check if the verifier_id already exists in the "users" table
       const { data: existingEntry, error: fetchError } = await supabase
         .from("users")
         .select("*")
-        .eq("world_id", worldID)
+        .eq("verifier_id", verifierID) // Updated column name
         .single();
 
       if (fetchError && fetchError.code !== "PGRST116") {
-        // If there is an error that’s not "No rows found", display the message
-        setMessage("Error checking world ID in Supabase.");
+        setMessage("Error checking verifier ID in Supabase.");
         return;
       }
 
       if (existingEntry) {
-        // If an entry with the world_id exists, update it
+        // If an entry with the verifier_id exists, update it
         const { error: updateError } = await supabase
           .from("users")
           .update({ email })
-          .eq("world_id", worldID);
+          .eq("verifier_id", verifierID); // Updated column name
 
         if (updateError) {
-          setMessage("already exists!");
+          setMessage("Already exists!");
         } else {
           setMessage("Email accepted, your rewards are added successfully!");
           router.push("/landing-page"); // Redirect to the reward page
         }
       } else {
-        // If world_id does not exist, insert a new entry with email and world_id
+        // If verifier_id does not exist, insert a new entry with email and verifier_id
         const { error: insertError } = await supabase
           .from("users")
-          .insert([{ world_id: worldID, email, points: 1 }]);
+          .insert([{ verifier_id: verifierID, email, points: 1 }]); // Updated column name
 
         if (insertError) {
           if (insertError.code === "23505") {
-            // Example unique violation code
-            setMessage("Entry already exists with this world ID.");
+            setMessage("Entry already exists with this verifier ID.");
           } else {
             setMessage("Error inserting new reward entry.");
           }

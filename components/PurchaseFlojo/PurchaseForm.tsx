@@ -9,9 +9,10 @@ import { useSession } from "next-auth/react";
 import supabase from "../Supabase/supabaseClient";
 import { useFooterContext } from "@/app/hooks/FooterContext";
 const axios = require("axios");
+import { initWeb3Auth, getWalletAddress } from "../../app/lib/web3auth";
 
 const PurchaseForm = () => {
-  const [worldID, setWorldID] = useState("");
+  const [verifierId, setVerifierId] = useState<string | null>("");
   const [error, setError] = useState<string | null>(null);
   const [priceInWLD, setPriceInWLD] = useState<number | null>(null);
   const [priceInUSD, setPriceInUSD] = useState<number | null>(null);
@@ -27,12 +28,28 @@ const PurchaseForm = () => {
 
   const { data: session } = useSession();
 
-  // Set the worldID when the session changes
+  // Set the verifierId when the session changes
   useEffect(() => {
-    if (session) {
-      setWorldID(session.user?.name || ""); // Set worldID if session exists
-    }
-  }, [session]);
+    const fetchVerifierId = async () => {
+      try {
+        const web3auth = await initWeb3Auth();
+        const provider = await web3auth.connect();
+        if (!provider) {
+          throw new Error("Wallet is not connected.");
+        }
+
+        const userInfo = await web3auth.getUserInfo();
+        console.log("User Info:", userInfo);
+
+        const fetchedVerifierId = userInfo?.verifierId || null;
+        setVerifierId(fetchedVerifierId);
+      } catch (error) {
+        console.error("Error fetching verifierId:", (error as Error).message);
+      }
+    };
+
+    fetchVerifierId();
+  }, []);
 
   // Create token instances (WLD and WETH)
   const WLD = new Token(
@@ -230,7 +247,7 @@ const PurchaseForm = () => {
           const { data: existingEntry, error: fetchError } = await supabase
             .from("users")
             .select("*")
-            .eq("world_id", worldID)
+            .eq("verifier_id", verifierId)
             .single();
 
           if (fetchError && fetchError.code !== "PGRST116") {
@@ -241,7 +258,7 @@ const PurchaseForm = () => {
           const { data } = await supabase
             .from("users")
             .select("points")
-            .eq("world_id", worldID);
+            .eq("verifier_id", verifierId);
 
           setPoints(data);
 
@@ -249,7 +266,7 @@ const PurchaseForm = () => {
             const { error: updateError } = await supabase
               .from("users")
               .update({ purchase_completed: true, points: `${points + 40}` })
-              .eq("world_id", worldID);
+              .eq("verifier_id", verifierId);
 
             if (updateError) {
               setError("already rewarded");
