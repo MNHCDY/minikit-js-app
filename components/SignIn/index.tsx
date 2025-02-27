@@ -1,206 +1,165 @@
 "use client";
+
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
-import supabase from "../Supabase/supabaseClient";
-import { useSession } from "next-auth/react";
-import "react-toastify/dist/ReactToastify.css";
-import { MdOutlineEmail } from "react-icons/md";
-import { IoCartOutline } from "react-icons/io5";
-import { useFooterContext } from "@/app/hooks/FooterContext";
-import ReactDOM from "react-dom";
-import { initWeb3Auth, getWalletAddress } from "../../app/lib/web3auth";
+import supabase from "@/components/Supabase/supabaseClient";
+import Image from "next/image";
+import background from "@/public/homepage/background.webp";
+import { initWeb3Auth, getWalletAddress } from "../../app/lib/web3auth"; // Updated Web3Auth functions
 
-type TaskType = "email" | "worldID" | "purchase";
-
-const Footer = () => {
+export const Login = () => {
   const router = useRouter();
-  const { data: session } = useSession();
-  const [isEmailRegistered, setIsEmailRegistered] = useState(false);
-  const [clickedTasks, setClickedTasks] = useState<{
-    email: boolean;
-    purchase: boolean;
-  }>({
-    email: false,
-    purchase: false,
-  });
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [user, setUser] = useState<{
+    verifier_id: string | null;
+    email?: string;
+  } | null>(null);
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const { hideFooter } = useFooterContext();
-
-  useEffect(() => {
-    const fetchTaskCompletionStatus = async () => {
-      try {
-        const web3auth = await initWeb3Auth();
-        const provider = await web3auth.connect();
-        if (!provider) {
-          throw new Error("Wallet is not connected.");
-        }
-
-        const userInfo = await web3auth.getUserInfo();
-        console.log("User Info:", userInfo);
-
-        const verifierId = userInfo?.verifierId || null;
-
-        if (!verifierId) return;
-
-        const { data, error } = await supabase
-          .from("users")
-          .select("email, purchase_completed")
-          .eq("verifier_id", verifierId)
-          .single();
-
-        if (error) throw error;
-
-        if (data) {
-          setClickedTasks({
-            email: !!data.email, // Set to true if email exists
-            purchase: data.purchase_completed,
-          });
-          setIsEmailRegistered(!!data.email);
-        }
-      } catch (error) {
-        console.error(
-          "Error fetching task completion status:",
-          (error as Error).message
-        );
-      }
-    };
-
-    fetchTaskCompletionStatus();
-  }, []);
-
-  const handleClick = async (task: TaskType) => {
-    if (!isEmailRegistered && task !== "email") return;
-
-    const updatedClickedTasks = { ...clickedTasks, [task]: true };
-    setClickedTasks(updatedClickedTasks);
-
+  // Function to check and save user details in Supabase
+  const checkAndSaveTokenToSupabase = async (
+    verifierId: string | null,
+    walletAddr: string | null,
+    email?: string
+  ) => {
     try {
-      const web3auth = await initWeb3Auth();
-      const provider = await web3auth.connect();
-      if (!provider) {
-        throw new Error("Wallet is not connected.");
-      }
-
-      const userInfo = await web3auth.getUserInfo();
-      const verifierId = userInfo?.verifierId || null;
-      if (!verifierId) return;
-
-      const updateData: Record<string, any> = {
-        purchase_completed: updatedClickedTasks.purchase,
-      };
-
-      if (updatedClickedTasks.email) updateData.email = userInfo?.email;
-
-      const { error } = await supabase
+      // Check if the user already exists
+      const { data: existingUser, error: fetchError } = await supabase
         .from("users")
-        .update(updateData)
+        .select("verifier_id")
         .eq("verifier_id", verifierId);
 
-      if (error) throw error;
-
-      if (task === "email") {
-        setIsEmailRegistered(true);
-      }
-
-      if (task === "purchase") {
-        setIsModalOpen(true);
+      if (fetchError) {
+        console.error("Error checking token in Supabase:", fetchError);
         return;
       }
 
-      switch (task) {
-        case "email":
-          router.push("/enter-email");
-          break;
-        default:
-          break;
+      // If user does not exist, insert the new verifier ID and Wallet Address
+      if (!existingUser || existingUser.length === 0) {
+        const { error } = await supabase.from("users").upsert(
+          {
+            email: email || "",
+            verifier_id: verifierId,
+            wallet_address: walletAddr || null, // Store wallet address if available
+          },
+          { onConflict: "email" }
+        );
+
+        if (error) {
+          console.error("Error saving to Supabase:", error);
+        }
+      } else {
+        console.log("User already exists in Supabase.");
       }
     } catch (error) {
-      console.error("Error updating task completion in Supabase:", error);
+      console.error("Unexpected error in Supabase operation:", error);
     }
   };
 
-  const handleConfirmPurchase = async () => {
-    setIsModalOpen(false);
-
+  const handleLogin = async () => {
     try {
-      const web3auth = await initWeb3Auth();
+      const web3auth = await initWeb3Auth(); // ✅ Ensure Web3Auth is initialized
+
       const provider = await web3auth.connect();
       if (!provider) {
         throw new Error("Wallet is not connected.");
       }
 
       const userInfo = await web3auth.getUserInfo();
-      const verifierId = userInfo?.verifierId || null;
-      if (!verifierId) return;
+      console.log("User Info:", userInfo); // 🔍 Log UserInfo to check its structure
 
-      const { error } = await supabase
-        .from("users")
-        .update({ purchase_completed: true })
-        .eq("verifier_id", verifierId);
+      const walletAddr = await getWalletAddress(web3auth);
 
-      if (error) throw error;
+      // ✅ Use the correct property names from your UserInfo object
+      setWalletAddress(walletAddr);
+      setUser({
+        verifier_id: userInfo?.verifierId || null, // Adjust this based on actual structure
+        email: userInfo?.email || "",
+      });
 
-      router.push("/purchase-flojo");
+      await checkAndSaveTokenToSupabase(
+        userInfo?.verifierId || null, // Ensure correct key
+        walletAddr,
+        userInfo?.email
+      );
+
+      router.push("/landing-page"); // ✅ Redirect after successful login
     } catch (error) {
-      console.error("Error updating purchase task:", error);
+      console.error("Login failed:", error);
     }
   };
 
-  return (
-    <div
-      className={`fixed bottom-0 left-0 w-full bg-white z-20 transition-transform duration-300 ${
-        hideFooter ? "translate-y-full" : "translate-y-0"
-      }`}
-    >
-      <div className="flex flex-col justify-items-center w-full text-white bg-[#07494E] ">
-        <div>
-          <div className="flex flex-row justify-center py-[1.5vh] gap-14 bg-transparent max-w-md mx-auto text-xs">
-            {/* Email Task */}
-            <div
-              onClick={() => handleClick("email")}
-              className="flex flex-col items-center justify-between border-2 rounded-xl cursor-pointer border-[#07494E]"
-            >
-              <div className="flex flex-col items-center space-y-2">
-                <div
-                  className={`w-10 h-10 rounded-full border-2 border-white flex items-center justify-center ${
-                    clickedTasks.email
-                      ? "bg-[#07494E] text-white"
-                      : "bg-white text-[#07494E]"
-                  }`}
-                >
-                  <span className="font-bold text-xl">
-                    <MdOutlineEmail />
-                  </span>
+  const handleLogout = async () => {
+    try {
+      const web3auth = await initWeb3Auth(); // Ensure instance exists
+      await web3auth.logout(); // Correct way to log out
+
+      // Reset state
+      setWalletAddress(null);
+      setUser(null);
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
+
+  if (user) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center p-24 gap-y-3">
+        Signed in as {user.verifier_id?.slice(0, 10) || "Unknown"}
+        <br />
+        <p>Wallet Address: {walletAddress || "Fetching..."}</p>
+        <br />
+        <button onClick={handleLogout}>Sign out</button>
+        <br />
+        <button onClick={() => router.push("/landing-page")}>
+          Redirect to App
+        </button>
+      </div>
+    );
+  } else {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <div className="relative w-full h-[100vh] pt-[3vh]">
+          <Image
+            src={background}
+            alt="Background Image"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 z-10">
+            <div className="w-full flex flex-col justify-center items-center gap-[8vh]">
+              <div className="w-[88vw] pt-[8vh] flex flex-col justify-between gap-[8vh]">
+                <div className="backdrop-blur-sm w-[68vw] pl-[5vw]">
+                  <h1 className="text-start text-[10vw] font-bold leading-[13vw] text-[#07494E]">
+                    Meet the World’s First Productivity Drink
+                  </h1>
                 </div>
-                <span className="font-normal">Connect email</span>
+                <div className="bg-white/40 backdrop-blur-sm py-[4vw] px-[4vw] w-[82vw] text-[#07494E] rounded-lg leading-[13vw]">
+                  {[
+                    { id: 1, number: "10,000+", title: "cans sold" },
+                    { id: 2, number: "20+", title: "offices" },
+                    { id: 3, number: "100k+", title: "points earned" },
+                  ].map((item) => (
+                    <p className="uppercase text-[5vw]" key={item.id}>
+                      <span className="font-bold text-[9.5vw]">
+                        {item.number}
+                      </span>
+                      &nbsp;&nbsp;
+                      {item.title}
+                    </p>
+                  ))}
+                </div>
               </div>
-            </div>
-            {/* Purchase Task */}
-            <div
-              onClick={() => handleClick("purchase")}
-              className="flex flex-col items-center justify-between border-2 rounded-xl cursor-pointer border-[#07494E]"
-            >
-              <div className="flex flex-col items-center space-y-2">
-                <div
-                  className={`w-10 h-10 rounded-full border-2 border-white flex items-center justify-center ${
-                    clickedTasks.purchase
-                      ? "bg-[#07494E] text-white"
-                      : "bg-white text-[#07494E]"
-                  }`}
+              <div className="uppercase flex flex-col items-center justify-center w-full gap-[5vw]">
+                <button
+                  className="bg-[#07494E] text-white py-[3vw] w-[48vw] rounded-lg text-[5vw] font-bold uppercase"
+                  onClick={handleLogin}
                 >
-                  <span className="font-bold text-xl ">
-                    <IoCartOutline />
-                  </span>
-                </div>
-                <span className="font-medium">Purchase Flojo</span>
+                  Sign in
+                </button>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  }
 };
-
-export default Footer;
