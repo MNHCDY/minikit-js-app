@@ -80,7 +80,7 @@ const Footer = () => {
         purchase_completed: updatedClickedTasks.purchase,
       };
 
-      if (updatedClickedTasks.email) {
+      if (updatedClickedTasks.email && !isEmailRegistered) {
         const web3auth = await initWeb3Auth();
         const userInfo = await web3auth.getUserInfo();
         updateData.email = userInfo?.email || null;
