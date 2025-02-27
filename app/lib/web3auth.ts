@@ -10,6 +10,7 @@ export const initWeb3Auth = async () => {
     throw new Error("Web3Auth Client ID is missing! Check your .env file.");
   }
 
+  // asd
   // ✅ Create a private key provider (WITH required arguments)
   const privateKeyProvider = new EthereumPrivateKeyProvider({
     config: {
