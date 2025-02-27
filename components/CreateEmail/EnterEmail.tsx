@@ -36,6 +36,7 @@ const EnterEmail = () => {
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("verifierID", verifierID);
 
     try {
       // Check if the verifier_id already exists in the "users" table
