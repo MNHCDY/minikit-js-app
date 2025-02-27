@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import supabase from "@/components/Supabase/supabaseClient";
 import { useSession } from "next-auth/react";
 import { FaArrowLeft } from "react-icons/fa6";
+import { initWeb3Auth } from "@/app/lib/web3auth";
 
 declare module "next-auth" {
   interface Session {
@@ -17,7 +18,7 @@ declare module "next-auth" {
 
 const EnterEmail = () => {
   const [email, setEmail] = useState("");
-  const [verifierID, setVerifierID] = useState(""); // Updated from worldID
+  const [verifierId, setVerifierId] = useState<string | null>("");
   const [message, setMessage] = useState("");
   const router = useRouter();
 
@@ -29,21 +30,37 @@ const EnterEmail = () => {
 
   // Set the verifierID when the session changes
   useEffect(() => {
-    if (session) {
-      setVerifierID(session.user?.name || ""); // Set verifierID if session exists
-    }
-  }, [session]); // Only run when session changes
+    const fetchVerifierId = async () => {
+      try {
+        const web3auth = await initWeb3Auth();
+        const provider = await web3auth.connect();
+        if (!provider) {
+          throw new Error("Wallet is not connected.");
+        }
+
+        const userInfo = await web3auth.getUserInfo();
+        console.log("User Info:", userInfo);
+
+        const fetchedVerifierId = userInfo?.verifierId || null;
+        setVerifierId(fetchedVerifierId);
+      } catch (error) {
+        console.error("Error fetching verifierId:", (error as Error).message);
+      }
+    };
+
+    fetchVerifierId();
+  }, []);
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("verifierID", verifierID);
+    console.log("verifierID", verifierId);
 
     try {
       // Check if the verifier_id already exists in the "users" table
       const { data: existingEntry, error: fetchError } = await supabase
         .from("users")
         .select("*")
-        .eq("verifier_id", verifierID) // Updated column name
+        .eq("verifier_id", verifierId) // Updated column name
         .single();
 
       if (fetchError && fetchError.code !== "PGRST116") {
@@ -56,7 +73,7 @@ const EnterEmail = () => {
         const { error: updateError } = await supabase
           .from("users")
           .update({ email })
-          .eq("verifier_id", verifierID); // Updated column name
+          .eq("verifier_id", verifierId); // Updated column name
 
         if (updateError) {
           setMessage("Already exists!");
@@ -68,7 +85,7 @@ const EnterEmail = () => {
         // If verifier_id does not exist, insert a new entry with email and verifier_id
         const { error: insertError } = await supabase
           .from("users")
-          .insert([{ verifier_id: verifierID, email, points: 1 }]); // Updated column name
+          .insert([{ verifier_id: verifierId, email, points: 1 }]); // Updated column name
 
         if (insertError) {
           if (insertError.code === "23505") {
